@@ -1,65 +1,65 @@
 // Service
-// const { BankAccountDetailsTable, userTable, UnitsTable, userUnitMap, customerAuthTable, LocationTable, ChronicIllnessTable, UserStaffTable, DepartmentTable } = require('../../../models/index');
-const { userTable } = require('../models/userModel')
+const { UserTable } = require('../../../models/index')
 const Sequelize = require('sequelize');
-// const Op = Sequelize.Op;
-// const xlsx = require('xlsx');
-// const fs = require('fs');
-// const fileExportFunction = require('../../../documents/file_exports');
+const { generateOTP, sendOTPToUser } = require("../../helper/otp");
 
 async function _createCustomerService(req) {
-    console.log('hi')
-    console.log(req)
-//   req.body.created_by = req.user.staff_id;
-  const { mobile_number, first_name, last_name} = req.body;
+  try {
+    const { mobile_number, first_name, last_name } = req.body;
 
-  if (!mobile_number) {
-    throw new Error("Please provide mobile number!");
-  }
-  const user = await userTable.findByPk(customer_id);
-  if (user) {
-    throw new Error("User already exist");
-  }
-  return user
+    if (!mobile_number) {
+      throw new Error("Please provide mobile number!");
+    }
 
+    let existingUser = await UserTable.findOne({
+      where: { mobile_number: mobile_number },
+    });
+
+    if (existingUser) {
+      // User already exists, send OTP
+      const otp = generateOTP()
+      // Send OTP
+      sendOTPToUser(existingUser, otp);
+
+      return {
+        data: { user: existingUser },
+        message: "OTP sent to existing user",
+      };
+    } else {
+      // User doesn't exist, create new user and send OTP
+      const newUser = await UserTable.create(req.body);
+      const otp = generateOTP(); // Replace otp column
+      // Send OTP
+      sendOTPToUser(newUser, otp); 
+
+      return {
+        data: { user: newUser },
+        message: "New user created and OTP sent",
+      };
+    }
+  } catch (error) {
+    console.error("Error in _createCustomerService:", error);
+    throw error; 
+  }
 }
 
-// async function _getBankAccountDetailsByUserId(req) {
-//   const { user_id } = req.params;
-//   return await BankAccountDetailsTable.findAll({
-//     where: { user_id, is_deleted: false },
-//     include: [
-//       {
-//         model: UserStaffTable,
-//         as: 'createdby',
-//         attributes: ["first_name", "last_name", "staff_number"],
-//         include: [
-//           { model: DepartmentTable },
-//         ]
-//       },
-//       {
-//         model: UnitsTable,
-//         where: { is_deleted: false }
-//       },
-//       {
-//         model: userTable,
-//         where: { is_deleted: false }
-//       }
+async function verifyOTPService(mobile_number, otp) {
+  const user = await UserTable.findOne({
+    where: { mobile_number: mobile_number, otp: otp },
+  });
 
-//     ],
-//     order: [["createdAt", "DESC"]],
-//   })
-// }
+  if (!user) {
+    throw new Error("Invalid mobile number or OTP.");
+  }
 
-// async function _getBankAccountDetailsById(req) {
-//   return await BankAccountDetailsTable.findOne({
-//     where: { bank_account_id: req.params.id, is_deleted: false },
-//     include: [
-//       { model: UserStaffTable, as: 'createdby' }
-//     ]
-//   });
-// }
+  // Reset the OTP after successful verification
+  // user.otp = null;
+  // await user.save();
+
+  return user;
+}
 
 module.exports = {
-    _createCustomerService,
-}
+  _createCustomerService,
+  verifyOTPService
+};

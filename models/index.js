@@ -8,16 +8,19 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
 });
 const UserTable = require('../app/users/models/userModel')(sequelize, Sequelize)
 
+sequelize
+  .authenticate()
+  .then(() => console.log("db is connected"))
+  .catch((err) => console.log("error" + err));
 
-const connectToDatabase = async () => {
-  try {
-    await sequelize.authenticate();
-    await sequelize.sync({ force: false });
-    console.log("Database connected and synchronized");
-  } catch (error) {
-    console.error("Error connecting to database:", error);
-  }
-};
+sequelize
+  .sync({ force: false })
+  .then(() => {
+    console.log("database connected");
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 
-  module.exports = connectToDatabase
+  module.exports = {UserTable}
 
