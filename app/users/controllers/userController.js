@@ -22,6 +22,7 @@ function createCustomer(req, res, next) {
 }
 
 async function verifyOTP(req, res, next) {
+
   try {
     const { mobile_number, otp } = req.body;
 
@@ -31,19 +32,28 @@ async function verifyOTP(req, res, next) {
         message: "Mobile number and OTP are required.",
       });
     }
-
     const user = await verifyOTPService(mobile_number, otp);
-
-    res.json({
-      status: "OK",
-      message: "OTP verified successfully.",
-      data: { user: user },
-    });
+    res.json(
+      apiResponse({
+        data: { message: "OTP verified successfully." },
+        status: "OK",
+      })
+    );
   } catch (error) {
-    console.error("Error in verifyOTP:", error);
-    res.status(500).json({
-      status: "Error",
-      message: "An error occurred while verifying OTP.",
-    });
+    if (error.message === "Invalid mobile number or OTP.") {
+      res.status(400).json(
+        apiResponse({
+          data: { message: "Invalid mobile number or OTP." },
+          status: "ERROR",
+        })
+      );
+    } else {
+      res.status(400).json(
+        apiResponse({
+          data: { message: "OTP has expired." },
+          status: "ERROR",
+        })
+      );
+    }
   }
 }

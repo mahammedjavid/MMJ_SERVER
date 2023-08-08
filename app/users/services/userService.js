@@ -1,7 +1,7 @@
 // Service
 const { UserTable } = require('../../../models/index')
 const Sequelize = require('sequelize');
-const { generateOTP, sendOTPToUser } = require("../../helper/otp");
+const { generateOTP, sendOTPToUser, resetOtp } = require("../../helper/otp");
 
 async function _createCustomerService(req) {
   try {
@@ -30,7 +30,7 @@ async function _createCustomerService(req) {
       const newUser = await UserTable.create(req.body);
       const otp = generateOTP(); // Replace otp column
       // Send OTP
-      sendOTPToUser(newUser, otp); 
+      sendOTPToUser(newUser, otp);
 
       return {
         data: { user: newUser },
@@ -39,7 +39,7 @@ async function _createCustomerService(req) {
     }
   } catch (error) {
     console.error("Error in _createCustomerService:", error);
-    throw error; 
+    throw error;
   }
 }
 
@@ -53,11 +53,21 @@ async function verifyOTPService(mobile_number, otp) {
   }
 
   // Reset the OTP after successful verification
-  // user.otp = null;
-  // await user.save();
+  user.otp = null;
+  await user.save();
+
+  // Set a timeout to reset the otp column after 30 seconds
+  setTimeout(async () => {
+    resetOtp(user)
+  }, 30000); // 30 seconds in milliseconds
 
   return user;
 }
+
+module.exports = {
+  verifyOTPService,
+};
+
 
 module.exports = {
   _createCustomerService,
