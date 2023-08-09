@@ -7,7 +7,6 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   port: DB_PORT,
 });
 
-// Import models for each entity
 const UserTable = require('../app/src/users/models/userModel')(sequelize, Sequelize);
 const CartTable = require('../app/src/cart/models/cartModel')(sequelize, Sequelize);
 const CategoryTable = require('../app/src/category/models/categoryModel')(sequelize, Sequelize);
@@ -18,7 +17,6 @@ const ProductTable = require('../app/src/product/models/ProductModel')(sequelize
 const ShipmentTable = require('../app/src/shipment/models/shipmentModel')(sequelize, Sequelize);
 const WishlistTable = require('../app/src/wishlist/models/wishListModel')(sequelize, Sequelize);
 
-// Define relationships between entities
 UserTable.hasOne(CartTable, { foreignKey: 'customer_id' });
 CartTable.belongsTo(UserTable, { foreignKey: 'customer_id' });
 
@@ -40,8 +38,6 @@ OrderItemTable.belongsTo(OrderTable, { foreignKey: 'order_id' });
 OrderTable.hasOne(ShipmentTable, { foreignKey: 'order_id' });
 ShipmentTable.belongsTo(OrderTable, { foreignKey: 'order_id' });
 
-// ... (add more relationships as needed)
-
 // Authenticate and sync the database
 sequelize
   .authenticate()
@@ -57,7 +53,6 @@ sequelize
     console.log(error);
   });
 
-// Export the models
 module.exports = {
   UserTable,
   CartTable,
