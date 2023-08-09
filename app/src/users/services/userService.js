@@ -1,7 +1,7 @@
 // Service
-const { UserTable } = require('../../../models/index')
+const { UserTable } = require('../../../../models/index')
 const Sequelize = require('sequelize');
-const { generateOTP, sendOTPToUser, resetOtp } = require("../../helper/otp");
+const { generateOTP, sendOTPToUser, resetOtp } = require("../../../helper/otp");
 
 async function _createCustomerService(req) {
   try {

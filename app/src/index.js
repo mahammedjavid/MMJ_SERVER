@@ -1,6 +1,6 @@
 var express = require("express");
 var app = express();
-const userRoutes = require("./users/controllers/userController");
+const userRoutes = require("../src/users/controllers/userController");
 
 // Routes
 /**

@@ -1,7 +1,6 @@
 const router = require("express").Router();
-const apiResponse = require("../../helper/apiResponce");
-const { _createCustomerService } = require("../services/userService");
-const { verifyOTPService } = require("../services/userService");
+const apiResponse = require("../../../helper/apiResponce");
+const { _createCustomerService,verifyOTPService } = require("../services/userService");
 
 router.post("/login", createCustomer);
 router.post("/verify-otp", verifyOTP);

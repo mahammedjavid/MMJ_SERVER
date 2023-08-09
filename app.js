@@ -14,6 +14,6 @@ app.use(express.json())
 app.use(compression())
 
 
-const appRoutes = require('./app/index');
+const appRoutes = require('./app/src/index');
 app.use('/api', appRoutes);
 app.listen(port, () => console.log(`Listening on port ${port}`));
