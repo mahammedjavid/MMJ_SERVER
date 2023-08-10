@@ -8,7 +8,11 @@ module.exports = (sequelize, DataTypes) => {
                 primaryKey: true,
                 autoIncrement: true,
             },
-            SKU: {
+            product_images: {
+                type: DataTypes.ARRAY(DataTypes.STRING),
+                allowNull : true
+            },
+            SKU: { // it is a number (usually eight alphanumeric digits) that retailers assign to products to keep track of stock levels internally. If a product has different colors and sizes, each variation has a unique SKU number.
                 type: DataTypes.STRING,
                 allowNull: false
             },
