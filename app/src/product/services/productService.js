@@ -40,9 +40,13 @@ async function _createProductService(req) {
         price,
         stock,
       };
-      console.log("Modified Product",modifiledProduct)
+      let existingProduct = await ProductTable.findOne({
+        where: { SKU },
+      }); 
+      if(existingProduct){
+        throw new Error("Product Already Exists")
+      } 
       const product = await ProductTable.create(modifiledProduct);
-      console.log("Product",product)
     return {
       data: product,
       message: "Product Created successfully",
