@@ -133,15 +133,17 @@ async function deactivateProduct(req, res, next) {
 // ? Create Product
 async function createBulkProducts(req, res, next) {
   try {
-    const result = await _createBulkProductsService(req.file.buffer);
-    res.json(
-      apiResponse({
-        data: result.data,
-        status: true,
-        message: result.message,
-        downloadLink : result.downloadLink
-      }),
-    );
+    _getProductListService().then(async (allProduct)=>{
+      const result = await _createBulkProductsService(req.file.buffer, allProduct.data)
+      res.json(
+        apiResponse({
+          data: result.data,
+          status: true,
+          message: result.message,
+          downloadLink : result.downloadLink
+        }),
+      );
+    })
   } catch (err) {
     res.json(
       apiResponse({

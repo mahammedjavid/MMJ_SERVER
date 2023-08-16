@@ -19,9 +19,8 @@ async function _createProductService(req) {
         }
       });
 
-      const errorMessage = `${missingFields.join(", ")} ${
-        missingFields.length > 1 ? "are" : "is"
-      } required`;
+      const errorMessage = `${missingFields.join(", ")} ${missingFields.length > 1 ? "are" : "is"
+        } required`;
       throw new Error(errorMessage);
     }
 
@@ -167,11 +166,12 @@ async function _deactivateProductService(productId) {
 
 // !Bulk Upload Service
 
-async function _createBulkProductsService(fileBuffer) {
+async function _createBulkProductsService(fileBuffer, allProduct) {
   try {
     const parsingResults = {
       success: [],
       errors: [],
+      log: ''
     };
 
     await new Promise((resolve, reject) => {
@@ -185,18 +185,6 @@ async function _createBulkProductsService(fileBuffer) {
               message: "Invalid or missing price",
             });
           } else {
-            // TODO: Check for existing product with the same SKU
-            let existingProduct = await ProductTable.findOne({
-              where: { SKU: data.SKU },
-            });
-            if (existingProduct) {
-              parsingResults.errors.push({
-                row: data,
-                message: "Product with SKU already exists",
-              });
-              return; // Skip further processing for this row
-            }
-
             // !if image uploaded in the binary
             // const imageColumns = ["image1", "image2", "image3", "image4", "image5"];
             // const imageUrls = [];
@@ -219,14 +207,26 @@ async function _createBulkProductsService(fileBuffer) {
               description: data.description,
               price,
               stock: parseInt(data.stock),
-              images: imageUrls,
+              product_images: imageUrls,
             };
             parsingResults.success.push(productData);
           }
         },
         async () => {
-          resolve(); // Resolve the promise when parsing is complete
+          // TODO: Check for existing product with the same SKU
+          allProduct.forEach((prod) => {
+            parsingResults.success = parsingResults.success.filter((mod) => {
+              if (prod.dataValues.SKU == mod.SKU) {
+                parsingResults.errors.push({
+                  row: prod.dataValues,
+                  message: "Product Already Exists",
+                });
+              }
+              return prod.dataValues.SKU !== mod.SKU
+            })
+          });
           const product = await ProductTable.bulkCreate(parsingResults.success);
+          resolve(); // Resolve the promise when parsing is complete
         },
         (error) => {
           parsingResults.errors.push(error);
@@ -236,14 +236,14 @@ async function _createBulkProductsService(fileBuffer) {
     });
 
     const newCsvContent = createCSVWithStatus(parsingResults);
-    const log = `data:text/csv;charset=utf-8,${encodeURIComponent(
+    parsingResults.log = `data:text/csv;charset=utf-8,${encodeURIComponent(
       newCsvContent
     )}`;
 
     return {
       data: parsingResults.success,
       errors: parsingResults.errors,
-      downloadLink: log,
+      downloadLink: parsingResults.log,
       message: `Bulk product creation finished`,
     };
   } catch (error) {
