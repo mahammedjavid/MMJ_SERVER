@@ -4,14 +4,16 @@ const apiResponse = (payload = {}) => {
     const ErrorsSymbol = Symbol("errors");
     const MessageSymbol = Symbol("message");
     const RedirectSymbol = Symbol("redirect");
+    const DownloadLinkSymbol = Symbol("downloadLink");
   
     class ApiResponse {
-      constructor({ data = {}, status = 1, errors = [], message = "", redirect = "" }) {
+      constructor({ data = {}, status = 1, errors = [], message = "", redirect = "",downloadLink = "" }) {
         this.data = data;
         this.status = status;
         this.errors = errors;
         this.message = message;
         this.redirect = redirect;
+        this.downloadLink = downloadLink;
       }
   
       get data() {
@@ -61,13 +63,19 @@ const apiResponse = (payload = {}) => {
       }
   
       toJSON() {
-        return {
+        const responseObj = {
           data: this.data,
           status: this.status,
           errors: this.errors.map((e) => (e.stack ? e.stack : e)),
           message: this.message,
-          redirect: this.redirect
+          redirect: this.redirect,
         };
+        // Add downloadLink to the response if it's provided
+        if (this.downloadLink) {
+          responseObj.downloadLink = this.downloadLink;
+        }
+  
+        return responseObj;
       }
     }
   

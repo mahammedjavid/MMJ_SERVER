@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const apiResponse = require("../../../helper/apiResponce");
 const { _createCustomerService,verifyOTPService } = require("../services/userService");
+const { generateAccessToken,generateRefreshToken } = require("../../../helper/jwtToken");
 
 router.post("/login", createCustomer);
 router.post("/verify-otp", verifyOTP);
@@ -32,6 +33,11 @@ async function verifyOTP(req, res, next) {
       });
     }
     const user = await verifyOTPService(mobile_number, otp);
+    // Generate tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    console.log(accessToken, refreshToken);
+
     res.json(
       apiResponse({
         data: { message: "OTP verified successfully." },
