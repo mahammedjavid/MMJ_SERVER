@@ -38,6 +38,9 @@ OrderItemTable.belongsTo(OrderTable, { foreignKey: 'order_id' });
 OrderTable.hasOne(ShipmentTable, { foreignKey: 'order_id' });
 ShipmentTable.belongsTo(OrderTable, { foreignKey: 'order_id' });
 
+CartTable.belongsTo(ProductTable, { foreignKey: 'product_id' });
+ProductTable.hasMany(CartTable, { foreignKey: 'product_id' });
+
 // Authenticate and sync the database
 sequelize
   .authenticate()

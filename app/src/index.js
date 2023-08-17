@@ -3,6 +3,7 @@ var app = express();
 const userRoutes = require("../src/users/controllers/userController");
 const productRoute = require("../src/product/controller/productController");
 const cartRoute = require("../src/cart/controller/cartContoller");
+const {verifyAccessToken} = require('../helper/jwtToken.js')
 
 // Routes
 /**
@@ -11,6 +12,6 @@ const cartRoute = require("../src/cart/controller/cartContoller");
  */
 app.use("/user", userRoutes);
 app.use("/product", productRoute);
-app.use("/cart", cartRoute);
+app.use("/cart",verifyAccessToken, cartRoute);
 
 module.exports = app;

@@ -1,7 +1,9 @@
 const router = require("express").Router();
 const apiResponse = require("../../../helper/apiResponce");
-const { _createCustomerService,verifyOTPService } = require("../services/userService");
-const { generateAccessToken,generateRefreshToken } = require("../../../helper/jwtToken");
+const {
+  _createCustomerService,
+  verifyOTPService,
+} = require("../services/userService");
 
 router.post("/login", createCustomer);
 router.post("/verify-otp", verifyOTP);
@@ -18,47 +20,38 @@ function createCustomer(req, res, next) {
         })
       )
     )
-    .catch((err) => next(err));
+    .catch((err) => {
+      res.json(
+        apiResponse({
+          data: "",
+          status: false,
+          message: err.message,
+        })
+      );
+    });
 }
 
 async function verifyOTP(req, res, next) {
-
-  try {
-    const { mobile_number, otp } = req.body;
-
-    if (!mobile_number || !otp) {
-      return res.status(400).json({
-        status: "Error",
-        message: "Mobile number and OTP are required.",
-      });
-    }
-    const user = await verifyOTPService(mobile_number, otp);
-    // Generate tokens
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-    console.log(accessToken, refreshToken);
-
-    res.json(
-      apiResponse({
-        data: { message: "OTP verified successfully." },
-        status: "OK",
-      })
-    );
-  } catch (error) {
-    if (error.message === "Invalid mobile number or OTP.") {
-      res.status(400).json(
+  verifyOTPService(req)
+    .then((result) =>
+      res.json(
         apiResponse({
-          data: { message: "Invalid mobile number or OTP." },
-          status: "ERROR",
+          data: result.data,
+          status: "OK",
+          message: result.message,
+          access_token: result.access_token,
+          refresh_token: result.refresh_token
+        })
+      )
+    )
+
+    .catch((err) => {
+      res.json(
+        apiResponse({
+          data: "",
+          status: false,
+          message: err.message,
         })
       );
-    } else {
-      res.status(400).json(
-        apiResponse({
-          data: { message: "OTP has expired." },
-          status: "ERROR",
-        })
-      );
-    }
-  }
+    });
 }

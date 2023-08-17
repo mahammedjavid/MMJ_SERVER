@@ -1,8 +1,8 @@
 const router = require("express").Router();
-const { _getCartListService } = require("../services/cartService");
+const { _getCartListService,_createCartItemService } = require("../services/cartService");
 const apiResponse = require("../../../helper/apiResponce");
 router.post("/add", addToCart);
-router.post("/all-cartitems", getAllCartItems);
+router.get("/all-cartitems", getAllCartItems);
 function addToCart(req, res, next) {
   _createCartItemService(req)
     .then((result) => {

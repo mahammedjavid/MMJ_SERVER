@@ -5,15 +5,19 @@ const apiResponse = (payload = {}) => {
     const MessageSymbol = Symbol("message");
     const RedirectSymbol = Symbol("redirect");
     const DownloadLinkSymbol = Symbol("downloadLink");
+    const access_token = Symbol("access_token");
+    const refresh_token = Symbol("refresh_token");     
   
     class ApiResponse {
-      constructor({ data = {}, status = 1, errors = [], message = "", redirect = "",downloadLink = "" }) {
+      constructor({ data = {}, status = 1, errors = [], message = "", redirect = "",downloadLink = "", access_token = "", refresh_token = "" }) {
         this.data = data;
         this.status = status;
         this.errors = errors;
         this.message = message;
         this.redirect = redirect;
         this.downloadLink = downloadLink;
+        this.access_token = access_token;
+        this.refresh_token = refresh_token;
       }
   
       get data() {
@@ -70,10 +74,17 @@ const apiResponse = (payload = {}) => {
           message: this.message,
           redirect: this.redirect,
         };
-        // Add downloadLink to the response if it's provided
+        // Add variable to the response if it's provided
         if (this.downloadLink) {
           responseObj.downloadLink = this.downloadLink;
         }
+        if (this.access_token) {
+          responseObj.access_token = this.access_token;
+        }
+        if (this.refresh_token) {
+          responseObj.refresh_token = this.refresh_token;
+        }
+        console.log(responseObj);
   
         return responseObj;
       }
