@@ -1,6 +1,7 @@
 // Service
 const { ProductTable } = require("../../../../models/index");
 const { uploadToS3 } = require("../../../helper/aws.s3-upload");
+const { validatePayload } = require("../../../helper/payloadValidation");
 const {
   parseCSVFromBuffer,
   createCSVWithStatus,
@@ -9,20 +10,24 @@ const fs = require("fs");
 async function _createProductService(req) {
   try {
     const { SKU, description, price, stock } = req.body;
+
     const requiredFields = ["SKU", "description", "price", "stock"];
-    let missingFields = [];
+    validatePayload(req.body,requiredFields);
+    // Old validation
+    // const requiredFields = ["SKU", "description", "price", "stock"];
+    // let missingFields = [];
 
-    if (!SKU || !description || !price || !stock) {
-      requiredFields.forEach((field) => {
-        if (!req.body[field]) {
-          missingFields.push(field);
-        }
-      });
+    // if (!SKU || !description || !price || !stock) {
+    //   requiredFields.forEach((field) => {
+    //     if (!req.body[field]) {
+    //       missingFields.push(field);
+    //     }
+    //   });
 
-      const errorMessage = `${missingFields.join(", ")} ${missingFields.length > 1 ? "are" : "is"
-        } required`;
-      throw new Error(errorMessage);
-    }
+    //   const errorMessage = `${missingFields.join(", ")} ${missingFields.length > 1 ? "are" : "is"
+    //     } required`;
+    //   throw new Error(errorMessage);
+    // }
 
     // !For single image upload
     // let uploadedImage =  uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
