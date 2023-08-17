@@ -40,11 +40,21 @@ async function _createCartItemService(req) {
     throw error;
   }
 }
-async function _getCartListService() {
+async function _getCartListService(req) {
     try {
-      const cartList = await CartTable.findAll();
+      const { customer_id } = req.body
+      const requiredFields = ["customer_id"]
+      validatePayload(req.body, requiredFields);
+      const customer = await UserTable.findByPk( customer_id)
+      if(!customer){
+        throw new Error("User not found");
+      }
+      const cartList = await CartTable.findAll({
+        where: { customer_id },
+        include: [ProductTable]
+      });
       return {
-        data: cartList,
+        data: cartList, //req.user will get the user object cause we added the authorization middleware
         message: "Cart list retrieved successfully",
       };
     } catch (error) {

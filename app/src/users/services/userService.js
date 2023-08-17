@@ -2,6 +2,11 @@
 const { UserTable } = require('../../../../models/index')
 const Sequelize = require('sequelize');
 const { generateOTP, sendOTPToUser, resetOtp } = require("../../../helper/otp");
+const { validatePayload } = require('../../../helper/payloadValidation');
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../../../helper/jwtToken");
 
 async function _createCustomerService(req) {
   try {
@@ -22,7 +27,7 @@ async function _createCustomerService(req) {
       sendOTPToUser(existingUser, otp);
 
       return {
-        data: { user: existingUser },
+        data: existingUser,
         message: "OTP sent to existing user",
       };
     } else {
@@ -33,7 +38,7 @@ async function _createCustomerService(req) {
       sendOTPToUser(newUser, otp);
 
       return {
-        data: { user: newUser },
+        data: newUser,
         message: "New user created and OTP sent",
       };
     }
@@ -43,33 +48,41 @@ async function _createCustomerService(req) {
   }
 }
 
-async function verifyOTPService(mobile_number, otp) {
-  const user = await UserTable.findOne({
-    where: { mobile_number: mobile_number, otp: otp },
-  });
+async function verifyOTPService(req) {
+  try {
+    const { mobile_number, otp } = req.body;
+    const requiredFields = ["mobile_number", "otp"]
+    validatePayload(req.body, requiredFields)
+    const user = await UserTable.findOne({
+      where: { mobile_number: mobile_number, otp: otp },
+    });
+    if (!user) {
+      throw new Error("Invalid mobile number or OTP.");
+    }
+    // Reset the OTP after successful verification
+    // user.otp = null;
+    // await user.save();
 
-  if (!user) {
-    throw new Error("Invalid mobile number or OTP.");
+    // reset the otp column after 30 seconds
+    // setTimeout(async () => {
+    //   resetOtp(user)
+    // }, 30000); // 30 seconds in milliseconds
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    return {
+      data: user,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      message: "OTP Verified Successfully",
+    };
+  } catch (error) {
+    console.error("Error in _verifyOTPService:", error);
+    throw error;
   }
-
-  // Reset the OTP after successful verification
-  user.otp = null;
-  await user.save();
-
-  // Set a timeout to reset the otp column after 30 seconds
-  setTimeout(async () => {
-    resetOtp(user)
-  }, 30000); // 30 seconds in milliseconds
-
-  return user;
 }
 
 module.exports = {
   verifyOTPService,
-};
-
-
-module.exports = {
-  _createCustomerService,
-  verifyOTPService
+  _createCustomerService
 };
