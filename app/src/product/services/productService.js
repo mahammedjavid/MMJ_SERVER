@@ -2,6 +2,7 @@
 const { ProductTable } = require("../../../../models/index");
 const { uploadToS3 } = require("../../../helper/aws.s3-upload");
 const { validatePayload } = require("../../../helper/payloadValidation");
+const { Op } = require("sequelize");
 const {
   parseCSVFromBuffer,
   createCSVWithStatus,
@@ -9,7 +10,7 @@ const {
 const fs = require("fs");
 async function _createProductService(req) {
   try {
-    const { SKU, description, price, stock } = req.body;
+    const { SKU, description, price, stock , category} = req.body;
 
     const requiredFields = ["SKU", "description", "price", "stock"];
     validatePayload(req.body,requiredFields);
@@ -52,6 +53,7 @@ async function _createProductService(req) {
       description,
       price,
       stock,
+      category
     };
     // !need to connect db
     let existingProduct = await ProductTable.findOne({
@@ -72,13 +74,23 @@ async function _createProductService(req) {
 }
 
 // Product list service
-async function _getProductListService() {
+async function _getProductListService(req) {
   try {
+    let query = req.query.category
+    if(query){
+      query = query.split(",");
+    }
+    let where_clause = {
+      isActive: true
+    }
+    if(query){
+      where_clause.category = {
+        [Op.overlap]: query,
+      }
+    }
     // Fetch the list of products from the database
     const productList = await ProductTable.findAll({
-      where: {
-        isActive: true, // Fetch only active products
-      },
+      where: where_clause
     });
     return {
       data: productList,
@@ -90,12 +102,15 @@ async function _getProductListService() {
   }
 }
 // Single product api
-async function _getSingleProductService(productId) {
+async function _getSingleProductService(req) {
   try {
+    const productId = req.params.id;
     // Fetch a single product by its ID from the database
     const product = await ProductTable.findOne({
-      id: productId,
-      isActive: true,
+      where: {
+        product_id: productId,
+        isActive: true,
+      },
     });
     if (!product) {
       throw new Error("Product not found");
@@ -138,6 +153,7 @@ async function _updateProductService(productId, updatedData) {
     product.description = updatedData.description || product.description;
     product.price = updatedData.price || product.price;
     product.stock = updatedData.stock || product.stock;
+    product.category = updatedData.category || product.category;
 
     // Save the changes to the database
     await product.save();
@@ -206,13 +222,17 @@ async function _createBulkProductsService(fileBuffer, allProduct) {
             const imageUrls = data["images"]
               ?.split(",")
               ?.map((url) => url.trim()); // Split and trim URLs
-
+            // !categories
+            const categoryList = data["category"]
+              ?.split(",")
+              ?.map((cat) => cat.trim()); // Split and trim URLs
             const productData = {
               SKU: data.SKU,
               description: data.description,
               price,
               stock: parseInt(data.stock),
               product_images: imageUrls,
+              category : categoryList
             };
             parsingResults.success.push(productData);
           }
@@ -244,7 +264,6 @@ async function _createBulkProductsService(fileBuffer, allProduct) {
     parsingResults.log = `data:text/csv;charset=utf-8,${encodeURIComponent(
       newCsvContent
     )}`;
-
     return {
       data: parsingResults.success,
       errors: parsingResults.errors,

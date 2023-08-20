@@ -84,7 +84,7 @@ const apiResponse = (payload = {}) => {
         if (this.refresh_token) {
           responseObj.refresh_token = this.refresh_token;
         }
-        console.log(responseObj);
+        // console.log(responseObj);
   
         return responseObj;
       }

@@ -12,11 +12,16 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.post("/create", upload.array("product_image"), createProduct);
-router.get("/list", getProductList);
-router.get("/:id", getSingleProduct);
-router.put("/:id/update", updateProduct);
-router.delete("/:id/deactivate", deactivateProduct);
+router
+  .route("/") // Routes for the root path /product
+  .post(upload.array("product_image"), createProduct)
+  .get(getProductList);
+
+router
+  .route("/:id") // Routes for paths with an ID parameter, e.g., /product/:id
+  .get(getSingleProduct)
+  .put(updateProduct)
+  .delete(deactivateProduct);
 
 // Bulk Upoload
 router.post("/bulk-create", upload.single("productFile"), createBulkProducts);
@@ -46,7 +51,7 @@ function createProduct(req, res, next) {
 
 // Product list api
 function getProductList(req, res, next) {
-  _getProductListService()
+  _getProductListService(req)
     .then((result) => {
       res.json(
         apiResponse({
@@ -68,8 +73,7 @@ function getProductList(req, res, next) {
 }
 // Single product
 function getSingleProduct(req, res, next) {
-  const productId = req.params.id;
-  _getSingleProductService(productId)
+  _getSingleProductService(req)
     .then((result) => {
       res.json(
         apiResponse({
