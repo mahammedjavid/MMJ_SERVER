@@ -6,7 +6,7 @@ const { ACCESSTOKENSECRET,REFRESHTOKENSECRET } = process.env;
 function generateAccessToken(user) {
 
   const payload = {
-    userId: user, 
+    userDetails: user, 
     // Add any other data to the payload
   };
 

@@ -9,7 +9,7 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
 
 const UserTable = require('../app/src/users/models/userModel')(sequelize, Sequelize);
 const CartTable = require('../app/src/cart/models/cartModel')(sequelize, Sequelize);
-const CategoryTable = require('../app/src/category/models/categoryModel')(sequelize, Sequelize);
+// const CategoryTable = require('../app/src/category/models/categoryModel')(sequelize, Sequelize);
 const OrderTable = require('../app/src/order/models/orderModel')(sequelize, Sequelize);
 const OrderItemTable = require('../app/src/order-item/models/orderItemModel')(sequelize, Sequelize);
 const PaymentTable = require('../app/src/payment/models/paymentModel')(sequelize, Sequelize);
@@ -29,8 +29,8 @@ WishlistTable.belongsTo(UserTable, { foreignKey: 'customer_id' });
 UserTable.hasMany(PaymentTable, { foreignKey: 'customer_id' });
 PaymentTable.belongsTo(UserTable, { foreignKey: 'customer_id' });
 
-CategoryTable.hasMany(ProductTable, { foreignKey: 'category_id' });
-ProductTable.belongsTo(CategoryTable, { foreignKey: 'category_id' });
+// CategoryTable.hasMany(ProductTable, { foreignKey: 'category_id' });
+// ProductTable.belongsTo(CategoryTable, { foreignKey: 'category_id' });
 
 OrderTable.hasMany(OrderItemTable, { foreignKey: 'order_id' });
 OrderItemTable.belongsTo(OrderTable, { foreignKey: 'order_id' });
@@ -59,7 +59,7 @@ sequelize
 module.exports = {
   UserTable,
   CartTable,
-  CategoryTable,
+  // CategoryTable,
   OrderTable,
   OrderItemTable,
   PaymentTable,
