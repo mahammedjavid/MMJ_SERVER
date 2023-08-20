@@ -73,8 +73,7 @@ function getProductList(req, res, next) {
 }
 // Single product
 function getSingleProduct(req, res, next) {
-  const productId = req.params.id;
-  _getSingleProductService(productId)
+  _getSingleProductService(req)
     .then((result) => {
       res.json(
         apiResponse({
