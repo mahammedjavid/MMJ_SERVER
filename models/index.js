@@ -3,8 +3,15 @@ const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT } = process.env;
 
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
-  dialect: "postgres",
+  dialect: 'mysql',
   port: DB_PORT,
+  operatorsAliases : false,
+  pool: {
+    max: 5, // Adjust as needed
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
 });
 
 const UserTable = require('../app/src/users/models/userModel')(sequelize, Sequelize);
