@@ -47,8 +47,9 @@ async function _createProductService(req) {
       let image = file.originalname; // for testing purposes
       uploadedImageUrls.push(image);
     });
+    const productImagesString = JSON.stringify(uploadedImageUrls);
     const modifiledProduct = {
-      product_images: uploadedImageUrls,
+      product_images: productImagesString,
       SKU,
       description,
       price,

@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
                 autoIncrement: true,
             },
             product_images: {
-                type: DataTypes.JSON,
+                type: DataTypes.TEXT,
                 allowNull : true
             },
             SKU: { // it is a number (usually eight alphanumeric digits) that retailers assign to products to keep track of stock levels internally. If a product has different colors and sizes, each variation has a unique SKU number.
@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false
             },
             category: {
-                type: DataTypes.JSON,
+                type: DataTypes.TEXT,
                 allowNull: true
             },
             isActive: {
