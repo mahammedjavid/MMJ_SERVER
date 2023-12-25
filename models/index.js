@@ -3,7 +3,7 @@ const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT } = process.env;
 
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
-  dialect: 'mysql',
+  dialect: "mysql",
   port: DB_PORT,
   operatorsAliases : false,
   pool: {
@@ -52,7 +52,7 @@ ProductTable.hasMany(CartTable, { foreignKey: 'product_id' });
 sequelize
   .authenticate()
   .then(() => console.log("db is connected"))
-  .catch((err) => console.log("error" + err));
+  .catch((err) => console.log("------------------------" + err));
 
 sequelize
   .sync({ force: false })
@@ -60,7 +60,7 @@ sequelize
     console.log("database connected");
   })
   .catch((error) => {
-    console.log(error);
+    console.log("--------------------------------",error);
   });
 
 module.exports = {
