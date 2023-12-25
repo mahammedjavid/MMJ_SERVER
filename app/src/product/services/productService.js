@@ -76,7 +76,7 @@ async function _createProductService(req) {
 // Product list service
 async function _getProductListService(req) {
   try {
-    let query = req.query.category
+    let query = req?.query?.category
     if(query){
       query = query.split(",");
     }
