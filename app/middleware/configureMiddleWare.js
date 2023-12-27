@@ -1,6 +1,5 @@
 // Create a new file, e.g., middleware.js
 const express = require('express');
-const app = express();
 const compression = require('compression');
 const bodyParser = require('body-parser');
 const cors = require('cors');

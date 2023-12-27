@@ -1,46 +1,39 @@
 const Sequelize = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-    const User = sequelize.define(
-        "customer_details", {
-            customer_id: {
+    const address = sequelize.define(
+        "address", {
+            address_id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
             },
-            mobile_number: {
+            add_type: {
                 type: DataTypes.STRING,
                 allowNull: false
             },
-            mobile_number: {
+            add_one: {
                 type: DataTypes.STRING,
                 allowNull: false
             },
-            email : {
+            add_two: {
                 type: DataTypes.STRING,
                 allowNull: true
             },
-            last_name: {
+            state: {
                 type: DataTypes.STRING,
-                allowNull: true,
+                allowNull: true
             },
-            otp: {
+            city: {
+                type: DataTypes.STRING,
+                allowNull: true
+            },
+            pincode: {
                 type: DataTypes.INTEGER,
                 allowNull: true
             },
-            is_deleted: {
-                type: DataTypes.BOOLEAN,
-                defaultValue: false
-            }
-        }, {
-            timestamps: true,
         }
     );
 
-    // Define associations here, if needed
-    // User.associate = (models) => {
-        // Define associations here
-    // };
-
-    return User;
+    return address;
 };

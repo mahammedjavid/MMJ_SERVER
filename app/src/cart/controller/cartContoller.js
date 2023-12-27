@@ -1,8 +1,8 @@
 const router = require("express").Router();
+const passport = require('passport')
 const { _getCartListService,_createCartItemService } = require("../services/cartService");
 const apiResponse = require("../../../helper/apiResponce");
-router.post("/add", addToCart);
-router.get("/all-cartitems", getAllCartItems);
+router.route('/').get(getAllCartItems).post(passport.authenticate('jwt',{session:false}),addToCart);
 function addToCart(req, res, next) {
   _createCartItemService(req)
     .then((result) => {

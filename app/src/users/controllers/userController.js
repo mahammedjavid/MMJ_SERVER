@@ -1,10 +1,13 @@
 const router = require("express").Router();
+const passport = require('passport')
 const apiResponse = require("../../../helper/apiResponce");
 const {
   _createCustomerService,
   verifyOTPService,
+  _getAllUserListervice
 } = require("../services/userService");
 
+router.route("/").get(passport.authenticate('jwt',{session:false}),getAllUserList)
 router.post("/login", createCustomer);
 router.post("/verify-otp", verifyOTP);
 module.exports = router;
@@ -45,6 +48,27 @@ async function verifyOTP(req, res, next) {
       )
     )
 
+    .catch((err) => {
+      res.json(
+        apiResponse({
+          data: "",
+          status: false,
+          message: err.message,
+        })
+      );
+    });
+}
+function getAllUserList(req, res, next) {
+  _getAllUserListervice(req)
+    .then((result) => {
+      res.json(
+        apiResponse({
+          data: result.data,
+          status: true,
+          message: result.message,
+        })
+      );
+    })
     .catch((err) => {
       res.json(
         apiResponse({

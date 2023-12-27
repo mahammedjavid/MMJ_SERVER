@@ -1,8 +1,8 @@
 const Sequelize = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-    const Categoty = sequelize.define(
-        "categoty", {
+    const Category = sequelize.define(
+        "category", {
             category_id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
@@ -12,15 +12,13 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING,
                 allowNull: false
             },
+            category_image: {
+                type: DataTypes.STRING,
+                allowNull: false
+            },
         }, {
             timestamps: true,
         }
     );
-
-    // Define associations here, if needed
-    // User.associate = (models) => {
-        // Define associations here
-    // };
-
-    return Categoty;
+    return Category;
 };

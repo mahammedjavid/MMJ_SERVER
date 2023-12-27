@@ -1,7 +1,8 @@
+const configureMiddleware = require('./app/middleware/configureMiddleWare');
 require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
-const configureMiddleware = require('./app/middleware/configureMiddleWare');
+const winston = require('winston');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -10,29 +11,33 @@ configureMiddleware(app);
 // Secure your app with Helmet
 app.use(helmet());
 
-// Logging middleware
-app.use((req, res, next) => {
-    winston.info(`${req.method} ${req.url}`);
-    next();
+// Configure Winston with a console transport
+const logger = winston.createLogger({
+    transports: [
+        new winston.transports.Console(),
+        // Add other transports as needed (e.g., file, third-party service)
+    ],
 });
+
+logger.info('Application starting...');
 
 const appRoutes = require('./app/src/index');
 app.use('/api', appRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    logger.error(err.stack);
     res.status(500).send('Something went wrong!');
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    console.log('Received SIGTERM. Shutting down gracefully...');
+    logger.info('Received SIGTERM. Shutting down gracefully...');
     // Perform cleanup here
     process.exit(0);
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+app.listen(port, () => logger.info(`Listening on port ${port}`));
 
 
 // Helmet sets various security-related HTTP headers to improve the security posture of your application. Some of the headers it sets include:
