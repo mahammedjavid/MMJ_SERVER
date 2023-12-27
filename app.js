@@ -21,6 +21,10 @@ const logger = winston.createLogger({
 
 logger.info('Application starting...');
 
+app.get('/', (req, res) => {
+    res.send('Welcome to MMJ Server!');
+  });
+  
 const appRoutes = require('./app/src/index');
 app.use('/api', appRoutes);
 

@@ -6,11 +6,14 @@ const cartRoute = require("../src/cart/controller/cartContoller");
 const wishListRoute = require("../src/wishlist/controller/wishListController");
 const categoryRoutes = require("../src/category/controller/categoryController");
 const BulkResponceRoute = require("../src/bulk-upload-responce/controller/bulkUploadController");
-const {verifyAccessToken} = require('../helper/jwtToken.js') //used passport for route authorization
+const { verifyAccessToken } = require('../helper/jwtToken.js') //used passport for route authorization
 const { passPOrtAuth } = require('../helper/passportAuth')
 const passport = require('passport')
 passPOrtAuth(passport)
 // passport.authenticate('jwt',{session:false}) add this middleware to authenticate route
+app.get('/', (req, res) => {
+    res.send('Welcome to MMJ Server!');
+});
 app.use("/user", userRoutes);
 app.use("/product", productRoute);
 app.use("/cart", cartRoute);
