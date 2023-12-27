@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const passport = require('passport')
 const {
   _createProductService,
   _getSingleProductService,
@@ -13,18 +14,18 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router
-  .route("/") // Routes for the root path /product
-  .post(upload.array("product_image"), createProduct)
+  .route("/")
+  .post(passport.authenticate('jwt', { session: false }), upload.array("product_image"), createProduct)
   .get(getProductList);
 
 router
-  .route("/:id") // Routes for paths with an ID parameter, e.g., /product/:id
+  .route("/:id")
   .get(getSingleProduct)
-  .put(updateProduct)
-  .delete(deactivateProduct);
+  .put(passport.authenticate('jwt', { session: false }), upload.array("product_image"), updateProduct)
+  .delete(passport.authenticate('jwt', { session: false }), deactivateProduct);
 
 // Bulk Upoload
-router.post("/bulk-create", upload.single("productFile"), createBulkProducts);
+router.post("/bulk-create", passport.authenticate('jwt', { session: false }), upload.single("productFile"), createBulkProducts);
 
 function createProduct(req, res, next) {
   _createProductService(req)
@@ -137,14 +138,14 @@ async function deactivateProduct(req, res, next) {
 // ? Create Product
 async function createBulkProducts(req, res, next) {
   try {
-    _getProductListService().then(async (allProduct)=>{
-      const result = await _createBulkProductsService(req.file.buffer, allProduct.data)
+    _getProductListService().then(async (allProduct) => {
+      const result = await _createBulkProductsService(req, allProduct.data, res)
       res.json(
         apiResponse({
-          data: result.data,
+          data: result?.data,
           status: true,
-          message: result.message,
-          downloadLink : result.downloadLink
+          message: result?.message,
+          downloadLink: result.downloadLink
         }),
       );
     })

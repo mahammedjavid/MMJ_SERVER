@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
                 primaryKey: true,
                 autoIncrement: true,
             },
+            product_title: {
+                type: DataTypes.STRING,
+                allowNull : true
+            },
             product_images: {
                 type: DataTypes.TEXT,
                 allowNull : true
@@ -27,10 +31,6 @@ module.exports = (sequelize, DataTypes) => {
             stock: {
                 type: DataTypes.INTEGER,
                 allowNull: false
-            },
-            category: {
-                type: DataTypes.TEXT,
-                allowNull: true
             },
             isActive: {
                 type: DataTypes.BOOLEAN,

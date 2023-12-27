@@ -82,7 +82,21 @@ async function verifyOTPService(req) {
   }
 }
 
+async function _getAllUserListervice(req) {
+  try {
+    const userData = await UserTable.findAll();
+    return {
+      data: userData,
+      message: "All User data retrieved successfully",
+    };
+  } catch (error) {
+    console.error("Error in _getAllUserListervice:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   verifyOTPService,
-  _createCustomerService
+  _createCustomerService,
+  _getAllUserListervice
 };

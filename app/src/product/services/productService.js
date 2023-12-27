@@ -1,34 +1,18 @@
 // Service
-const { ProductTable } = require("../../../../models/index");
+const { ProductTable, CategoryTable, BulkUpload } = require("../../../../models/index");
 const { uploadToS3 } = require("../../../helper/aws.s3-upload");
+const { convertCsvToListOfObject } = require('../../../helper/csvToJson')
+const { convertObjectListToCsv } = require('../../../helper/JsonTocsv')
+const { getTheUserInfoFromJwt } = require('../../../helper/getTheUserInfoFromAccessToken')
 const { validatePayload } = require("../../../helper/payloadValidation");
 const { Op } = require("sequelize");
-const {
-  parseCSVFromBuffer,
-  createCSVWithStatus,
-} = require("../../../helper/cscHelper");
 const fs = require("fs");
 async function _createProductService(req) {
   try {
-    const { SKU, description, price, stock , category} = req.body;
+    const { SKU, description, price, stock, product_title, category_id } = req.body;
 
-    const requiredFields = ["SKU", "description", "price", "stock"];
-    validatePayload(req.body,requiredFields);
-    // Old validation
-    // const requiredFields = ["SKU", "description", "price", "stock"];
-    // let missingFields = [];
-
-    // if (!SKU || !description || !price || !stock) {
-    //   requiredFields.forEach((field) => {
-    //     if (!req.body[field]) {
-    //       missingFields.push(field);
-    //     }
-    //   });
-
-    //   const errorMessage = `${missingFields.join(", ")} ${missingFields.length > 1 ? "are" : "is"
-    //     } required`;
-    //   throw new Error(errorMessage);
-    // }
+    const requiredFields = ["SKU", "description", "price", "stock", "product_title", "category_id"];
+    validatePayload(req.body, requiredFields);
 
     // !For single image upload
     // let uploadedImage =  uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
@@ -50,22 +34,28 @@ async function _createProductService(req) {
     const productImagesString = JSON.stringify(uploadedImageUrls);
     const modifiledProduct = {
       product_images: productImagesString,
+      product_title,
       SKU,
       description,
       price,
       stock,
-      category
+      category_id
     };
-    // !need to connect db
     let existingProduct = await ProductTable.findOne({
       where: { SKU },
     });
     if (existingProduct) {
       throw new Error("Product Already Exists");
     }
+    let cateoryExist = await CategoryTable.findOne({
+      where: { category_id },
+    });
+    if (!cateoryExist) {
+      throw new Error("Category not found");
+    }
     const product = await ProductTable.create(modifiledProduct);
     return {
-      data: product, //TODO
+      data: product,
       message: "Product Created successfully",
     };
   } catch (error) {
@@ -77,21 +67,13 @@ async function _createProductService(req) {
 // Product list service
 async function _getProductListService(req) {
   try {
-    let query = req?.query?.category
-    if(query){
-      query = query.split(",");
-    }
     let where_clause = {
       isActive: true
     }
-    if(query){
-      where_clause.category = {
-        [Op.overlap]: query,
-      }
-    }
     // Fetch the list of products from the database
     const productList = await ProductTable.findAll({
-      where: where_clause
+      where: where_clause,
+      include: [CategoryTable]
     });
     return {
       data: productList,
@@ -106,7 +88,6 @@ async function _getProductListService(req) {
 async function _getSingleProductService(req) {
   try {
     const productId = req.params.id;
-    // Fetch a single product by its ID from the database
     const product = await ProductTable.findOne({
       where: {
         product_id: productId,
@@ -135,27 +116,33 @@ async function _updateProductService(productId, updatedData) {
     }
 
     // Update the S3 links and other data based on updatedData
-    if (updatedData.product_images) {
-      const updatedImageUrls = await Promise.all(
-        updatedData.product_images.map(async (image) => {
-          // Update S3 links if needed
-          const updatedImage = await uploadToS3(
-            image.buffer,
-            image.originalname,
-            image.mimetype
-          );
-          return updatedImage;
-        })
-      );
-      product.product_images = updatedImageUrls;
-    }
+    // if (updatedData.product_images) {
+    //   const updatedImageUrls = await Promise.all(
+    //     updatedData.product_images.map(async (image) => {
+    //       const updatedImage = await uploadToS3(
+    //         image.buffer,
+    //         image.originalname,
+    //         image.mimetype
+    //       );
+    //       return updatedImage;
+    //     })
+    //   );
+    //   product.product_images = updatedImageUrls;
+    // }
     // Update other fields if needed
     product.SKU = updatedData.SKU || product.SKU;
     product.description = updatedData.description || product.description;
     product.price = updatedData.price || product.price;
     product.stock = updatedData.stock || product.stock;
-    product.category = updatedData.category || product.category;
+    product.category_id = updatedData.category_id || product.category_id;
+    product.product_title = updatedData.product_title || product.product_title;
 
+    let cateoryExist = await CategoryTable.findOne({
+      where: { category_id  : product.category_id},
+    });
+    if (!cateoryExist) {
+      throw new Error("Category not found");
+    }
     // Save the changes to the database
     await product.save();
     return {
@@ -188,94 +175,70 @@ async function _deactivateProductService(productId) {
 
 // !Bulk Upload Service
 
-async function _createBulkProductsService(fileBuffer, allProduct) {
+async function _createBulkProductsService(req, allProduct, responce) {
   try {
-    const parsingResults = {
-      success: [],
-      errors: [],
-      log: ''
-    };
+    const user = getTheUserInfoFromJwt(req)?.userDetails
+    console.log("user",user)
+    // new bulk upload flow
 
-    await new Promise((resolve, reject) => {
-      parseCSVFromBuffer(
-        fileBuffer,
-        async (data) => {
-          const price = parseFloat(data.price);
-          if (isNaN(price) || price <= 0) {
-            parsingResults.errors.push({
-              row: data,
-              message: "Invalid or missing price",
-            });
-          } else {
-            // !if image uploaded in the binary
-            // const imageColumns = ["image1", "image2", "image3", "image4", "image5"];
-            // const imageUrls = [];
-            // console.log(data)
-            // for (const imageColumn of imageColumns) {
-            //   const imageUrl = data[imageColumn];
-            //   if (imageUrl) {
-            //     const imageBuffer = fs.readFileSync(imageUrl);
-            //     const s3Link = await uploadToS3(imageBuffer, imageUrl, "image/jpeg"); // Modify mimetype accordingly
-            //     imageUrls.push(s3Link);
-            //   }
-            // }
-            // !if image uploaded in url
-            const imageUrls = data["images"]
-              ?.split(",")
-              ?.map((url) => url.trim()); // Split and trim URLs
-            // !categories
-            const categoryList = data["category"]
-              ?.split(",")
-              ?.map((cat) => cat.trim()); // Split and trim URLs
-            const productData = {
-              SKU: data.SKU,
-              description: data.description,
-              price,
-              stock: parseInt(data.stock),
-              product_images: imageUrls,
-              category : categoryList
-            };
-            parsingResults.success.push(productData);
-          }
-        },
-        async () => {
-          // TODO: Check for existing product with the same SKU
-          allProduct.forEach((prod) => {
-            parsingResults.success = parsingResults.success.filter((mod) => {
-              if (prod.dataValues.SKU == mod.SKU) {
-                parsingResults.errors.push({
-                  row: prod.dataValues,
-                  message: "Product Already Exists",
-                });
-              }
-              return prod.dataValues.SKU !== mod.SKU
-            })
-          });
-          const product = await ProductTable.bulkCreate(parsingResults.success);
-          resolve(); // Resolve the promise when parsing is complete
-        },
-        (error) => {
-          parsingResults.errors.push(error);
-          reject(error); // Reject the promise on error
-        }
-      );
+    const data = convertCsvToListOfObject(req.file);
+    const res = await data;
+
+    console.log("data is", res);
+
+    const modifiedProducts = res.map((product) => {
+      const existingProduct = allProduct.find((existing) => existing.SKU === product.SKU);
+
+      // Initialize a 'status' key in each product object
+      product.status = true;
+      product.message = 'Success';
+
+      // Check if the price is a valid number and not negative
+      if (isNaN(Number(product.price)) || Number(product.price) < 0) {
+        product.status = false;
+        product.message = 'Price is not valid';
+      }
+
+      if (existingProduct) {
+        // SKU exists in the database
+        product.status = false;
+        product.message = 'Product already exists';
+      }
+
+      return product;
     });
 
-    const newCsvContent = createCSVWithStatus(parsingResults);
-    parsingResults.log = `data:text/csv;charset=utf-8,${encodeURIComponent(
-      newCsvContent
-    )}`;
+    const content = await convertObjectListToCsv(modifiedProducts);
+
+    const downloadLink = `data:text/csv;charset=utf-8,${encodeURIComponent(content)}`;
+    console.log(downloadLink);
+
+    const s3Link = 's3link'; // await uploadToS3(file.fileBuffer, file.originalname, file.fileType);
+    const bulk = {
+      fileName: req.file.originalname,
+      fileLink: s3Link,
+      message: 'Uploaded successfully',
+      customer_id : user.customer_id
+    };
+
+    const bulkUploadResponse = await BulkUpload.create(bulk);
+    const successfulProducts = modifiedProducts.filter((product) => product.status && product.message == 'Success');
+    let productCreateResponse = ''
+    if (successfulProducts.length){
+      productCreateResponse = await ProductTable.bulkCreate(successfulProducts)
+    } ;
+
     return {
-      data: parsingResults.success,
-      errors: parsingResults.errors,
-      downloadLink: parsingResults.log,
-      message: `Bulk product creation finished`,
+      data: productCreateResponse,
+      downloadLink: downloadLink,
+      message: 'Bulk uploaded successfully',
     };
   } catch (error) {
     console.error("Error in _createBulkProductsService:", error);
     throw error;
   }
 }
+
 
 module.exports = {
   _createProductService,

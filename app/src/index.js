@@ -1,21 +1,21 @@
 var express = require("express");
 var app = express();
-const userRoutes = require("../src/users/controllers/userController");
+const userRoutes = require("./users/controllers/userController");
 const productRoute = require("../src/product/controller/productController");
 const cartRoute = require("../src/cart/controller/cartContoller");
+const wishListRoute = require("../src/wishlist/controller/wishListController");
 const categoryRoutes = require("../src/category/controller/categoryController");
-const {verifyAccessToken} = require('../helper/jwtToken.js')
+const BulkResponceRoute = require("../src/bulk-upload-responce/controller/bulkUploadController");
+const {verifyAccessToken} = require('../helper/jwtToken.js') //used passport for route authorization
 const { passPOrtAuth } = require('../helper/passportAuth')
 const passport = require('passport')
 passPOrtAuth(passport)
-// Routes
-/**
- * Authentication API's are implemented
- * /api/account/* are auth API's
- */
+// passport.authenticate('jwt',{session:false}) add this middleware to authenticate route
 app.use("/user", userRoutes);
 app.use("/product", productRoute);
-app.use("/cart",passport.authenticate('jwt',{session:false}), cartRoute);
+app.use("/cart", cartRoute);
+app.use("/wish-list", wishListRoute);
 app.use('/categories', categoryRoutes);
+app.use('/bulk-responce', BulkResponceRoute);
 
 module.exports = app;
