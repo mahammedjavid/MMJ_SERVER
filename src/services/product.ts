@@ -12,6 +12,7 @@ import { convertObjectListToCsv } from "../helper/JsonTocsv";
 import { getTheUserInfoFromJwt } from "../helper/getTheUserInfoFromAccessToken";
 import { validatePayload } from "../helper/payloadValidation";
 import generateNextSequentialID from "../utils/generateSKU";
+import { isValidSize, validSizes } from "../utils/func";
 
 async function _createProductService(req: any, res: Response) {
   try {
@@ -22,6 +23,7 @@ async function _createProductService(req: any, res: Response) {
       product_title,
       category_id,
       product_other_info,
+      size,
     } = req.body;
 
     const requiredFields = [
@@ -30,8 +32,16 @@ async function _createProductService(req: any, res: Response) {
       "stock",
       "product_title",
       "category_id",
+      "size",
     ];
     validatePayload(req.body, requiredFields);
+
+    if (
+      (Array.isArray(size) && !size.every((s: any) => isValidSize(s))) ||
+      (!Array.isArray(size) && !isValidSize(size))
+    ) {
+      throw new Error(`Size must be in this ${validSizes.join(", ")}`);
+    }
 
     // !For single image upload
     // let uploadedImage =  uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
@@ -50,13 +60,12 @@ async function _createProductService(req: any, res: Response) {
       let image = file.originalname; // for testing purposes
       uploadedImageUrls.push(image);
     });
-    let lastProduct :any = await ProductTable.findOne({
-      order: [['SKU', 'DESC']],
+    let lastProduct: any = await ProductTable.findOne({
+      order: [["SKU", "DESC"]],
     });
-    const SKU = generateNextSequentialID(lastProduct?.SKU || 'MMJ00000')
-    const productImagesString = JSON.stringify(uploadedImageUrls);
+    const SKU = generateNextSequentialID(lastProduct?.SKU || "MMJ00000");
     const modifiedProduct = {
-      product_images: productImagesString,
+      product_images: uploadedImageUrls.join(","),
       product_title,
       SKU,
       product_description,
@@ -64,6 +73,9 @@ async function _createProductService(req: any, res: Response) {
       stock,
       category_id,
       product_other_info,
+      size: Array.isArray(size)
+        ? size.map((s) => s.toUpperCase())?.join(",")
+        : size.toUpperCase(),
     };
     let existingProduct = await ProductTable.findOne({
       where: { SKU },
@@ -143,6 +155,14 @@ async function _updateProductService(req: Request, res: Response) {
     if (!product) {
       throw new Error("Product not found");
     }
+    let updatedsize = updatedData.size || product.size;
+    if (
+      (Array.isArray(updatedsize) &&
+        !updatedsize.every((s: any) => isValidSize(s))) ||
+      (!Array.isArray(updatedsize) && !isValidSize(updatedsize))
+    ) {
+      throw new Error(`Size must be in this ${validSizes.join(", ")}`);
+    }
 
     // Update the S3 links and other data based on updatedData
     // if (updatedData.product_images) {
@@ -167,6 +187,9 @@ async function _updateProductService(req: Request, res: Response) {
     product.product_title = updatedData.product_title || product.product_title;
     product.product_description =
       updatedData.product_description || product.product_description;
+    product.size = Array.isArray(updatedsize)
+      ? updatedsize.map((s) => s.toUpperCase())?.join(",")
+      : updatedsize.toUpperCase();
 
     let categoryExist = await CategoryTable.findOne({
       where: { category_id: product.category_id },
@@ -215,50 +238,62 @@ async function _createBulkProductsService(req: any, res: Response) {
     // new bulk upload flow
     const data = await convertCsvToListOfObject(req.file);
 
-    let lastProduct :any = await ProductTable.findOne({
-      order: [['SKU', 'DESC']],
+    let lastProduct: any = await ProductTable.findOne({
+      order: [["SKU", "DESC"]],
     });
-    console.log("last Product ------------------",lastProduct);
+    console.log("last Product ------------------", lastProduct);
 
-    const modifiedProducts = data.map((product, index: number) => {
-      const existingProduct: any = allProduct.find(
-        (existing: any) => existing.SKU === product.SKU
-      );
-
-      // Initialize a 'status' key in each product object
-      product.status = true;
-      product.message = "Success";
-
-      // Check if the price is a valid number and not negative
-      if (isNaN(Number(product.price)) || Number(product.price) < 0) {
-        product.status = false;
-        product.message = "Price is not valid";
-      }
-
-      if (existingProduct) {
-        // SKU exists in the database
-        product.status = false;
-        product.message = "Product already exists";
-      }
-            
-      //!category check confition
-      // let category_id = await CategoryTable.findOne({where : {category_id : product.category_id} })
-
-      // if(!product.category_id || !category_id){
-      //   product.status = false;
-      //   product.message = "Invalid Category ID: ";
-      // } 
-
-
-      if (product.status) {
-
-        product.SKU = generateNextSequentialID(
-          index === 0 ? lastProduct?.SKU || 'MMJ00000' : data[index-1].SKU
+    const modifiedProductsPromises = data.map(
+      async (product, index: number) => {
+        //make syncronous for testing
+        const existingProduct: any = allProduct.find(
+          (existing: any) => existing.SKU === product.SKU
         );
-      }
 
-      return product;
-    });
+        product.status = true;
+        product.message = "Success";
+
+        if (isNaN(Number(product.price)) || Number(product.price) < 0) {
+          product.status = false;
+          product.message = "Price is not valid";
+        }
+
+        if (product.size) {
+          let validaSize = false;
+          const sizeList = product.size?.split(",");
+          if (sizeList.every((s: any) => isValidSize(s))) {
+            product.status = true;
+            product.size = sizeList.map((s: any) => s.toUpperCase()).join(",");
+          } else {
+            product.status = false;
+            product.message = `Size must be in this ${validSizes.join(", ")}`;
+          }
+        } else {
+          product.status = false;
+          product.message = `Size must be in this ${validSizes.join(", ")}`;
+        }
+
+        if (existingProduct) {
+          product.status = false;
+          product.message = "Product already exists";
+        }
+        if (!product.category_id) {
+          product.status = false;
+          product.message = "Category ID is required";
+        } else {
+          const category = await CategoryTable.findByPk(product.category_id); //make this syncronous for testing and remove async in the loop
+          if (!category) {
+            product.status = false;
+            product.message = "Category does not exist";
+          }
+        }
+
+        return product;
+      }
+    );
+
+    const modifiedProducts = await Promise.all(modifiedProductsPromises);
+    console.log(modifiedProducts);
 
     const content = await convertObjectListToCsv(modifiedProducts);
 
@@ -278,6 +313,16 @@ async function _createBulkProductsService(req: any, res: Response) {
     const successfulProducts = modifiedProducts.filter(
       (product) => product.status && product.message == "Success"
     );
+    // SKU for Sucess products
+    successfulProducts.forEach((p, index) => {
+      p.SKU = generateNextSequentialID(
+        index === 0 && !lastProduct?.SKU
+          ? "MMJ00000"
+          : index === 0
+          ? lastProduct?.SKU
+          : data[index - 1].SKU
+      );
+    });
     let productCreateResponse: any = "";
     if (successfulProducts.length) {
       productCreateResponse = await ProductTable.bulkCreate(successfulProducts);

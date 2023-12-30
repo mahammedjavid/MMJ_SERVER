@@ -42,6 +42,10 @@ const ProductSchema = (sequelize) => {
             allowNull: false,
             defaultValue: true,
         },
+        size: {
+            type: sequelize_1.DataTypes.TEXT,
+            allowNull: false,
+        },
     }, {
         timestamps: true,
     });
