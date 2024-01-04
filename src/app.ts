@@ -21,7 +21,7 @@ const logger: winston.Logger = winston.createLogger({
 logger.info("Application starting...");
 
 app.get("/", (req: express.Request, res: express.Response) => {
-  res.send("Welcome to MMJ Server!");
+  res.send("Welcome to MMJ Server!!");
 });
 
 import appRoutes from "./routes/index";
