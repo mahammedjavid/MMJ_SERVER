@@ -43,7 +43,7 @@ const logger = winston.createLogger({
 });
 logger.info("Application starting...");
 app.get("/", (req, res) => {
-    res.send("Welcome to MMJ Server!");
+    res.send("Welcome to MMJ Server!!");
 });
 const index_1 = __importDefault(require("./routes/index"));
 app.use("/api", index_1.default);
