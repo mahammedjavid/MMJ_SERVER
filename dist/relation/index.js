@@ -16,10 +16,10 @@ const wishList_1 = __importDefault(require("../models/wishList"));
 const address_1 = __importDefault(require("../models/address"));
 const category_1 = __importDefault(require("../models/category"));
 const bulkUploadResponce_1 = __importDefault(require("../models/bulkUploadResponce"));
-const { DB_USER = "", DB_PASSWORD = "", DB_HOST = "", DB_NAME = "", DB_PORT = "3306", } = process.env;
+const { DB_USER = "", DB_PASSWORD = "", DB_HOST = "", DB_NAME = "", DB_PORT = "", } = process.env;
 const sequelize = new sequelize_1.Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
     host: DB_HOST,
-    dialect: "mysql",
+    dialect: "postgres",
     port: parseInt(DB_PORT, 10),
     pool: {
         max: 5,
