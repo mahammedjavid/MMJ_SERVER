@@ -16,12 +16,12 @@ const {
   DB_PASSWORD = "",
   DB_HOST = "",
   DB_NAME = "",
-  DB_PORT = "3306",
+  DB_PORT = "",
 } = process.env;
 
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
-  dialect: "mysql",
+  dialect: "postgres",
   port: parseInt(DB_PORT, 10),
   pool: {
     max: 5,
