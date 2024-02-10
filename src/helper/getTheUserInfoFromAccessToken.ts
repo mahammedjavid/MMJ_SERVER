@@ -8,7 +8,7 @@ function getTheUserInfoFromJwt(req: Request):any {
       const decodedToken = jwt.decode(accessToken as string);
       return decodedToken;
     }
-    return null;
+    throw new Error('Access token not found');
   } catch (error) {
     throw error;
   }

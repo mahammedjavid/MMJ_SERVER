@@ -6,9 +6,11 @@ import {
   verifyOTPService,
   _getAllUserListervice
 } from "../services/customer";
+import { passPOrtAuth } from "../helper/passportAuth";
 
 const router = Router();
-router.route("/").get(passport.authenticate('jwt', { session: false }), getAllUserList);
+passPOrtAuth(passport)
+router.route("/").get(passport.authenticate('jwt', { session: false }) , getAllUserList);
 router.post("/login", createCustomer);
 router.post("/verify-otp", verifyOTP);
 

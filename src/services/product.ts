@@ -232,8 +232,8 @@ async function _deactivateProductService(req: Request, res: Response) {
 
 async function _createBulkProductsService(req: any, res: Response) {
   try {
-    const allProduct = await ProductTable.findAll();
     const user: any = getTheUserInfoFromJwt(req)?.userDetails;
+    const allProduct = await ProductTable.findAll();
 
     // new bulk upload flow
     const data = await convertCsvToListOfObject(req.file);
@@ -243,54 +243,78 @@ async function _createBulkProductsService(req: any, res: Response) {
     });
     console.log("last Product ------------------", lastProduct);
 
-    const modifiedProductsPromises = data.map(
-      async (product, index: number) => {
-        //make syncronous for testing
-        const existingProduct: any = allProduct.find(
-          (existing: any) => existing.SKU === product.SKU
-        );
+    const modifiedProductsPromises = [];
 
-        product.status = true;
-        product.message = "Success";
-
-        if (isNaN(Number(product.price)) || Number(product.price) < 0) {
-          product.status = false;
-          product.message = "Price is not valid";
-        }
-
-        if (product.size) {
-          let validaSize = false;
-          const sizeList = product.size?.split(",");
-          if (sizeList.every((s: any) => isValidSize(s))) {
-            product.status = true;
-            product.size = sizeList.map((s: any) => s.toUpperCase()).join(",");
-          } else {
-            product.status = false;
-            product.message = `Size must be in this ${validSizes.join(", ")}`;
-          }
+    for (let index = 0; index < data.length; index++) {
+      const product = data[index];
+      console.log("1111111111111111",product.product_title)
+      const existingProduct = allProduct.find((existing:any) => existing.SKU === product.SKU);
+    
+      if (isNaN(Number(product.price)) || Number(product.price) < 0) {
+        product.status = false;
+        product.message = "Price is not valid";
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
+      }
+    
+      if (product.size) {
+        const sizeList = product.size.split(",");
+        if (sizeList.every((s:any) => isValidSize(s))) {
+          product.status = true;
+          product.size = sizeList.map((s:any) => s.toUpperCase()).join(",");
         } else {
           product.status = false;
           product.message = `Size must be in this ${validSizes.join(", ")}`;
+          modifiedProductsPromises.push(Promise.resolve(product));
+          continue; // Move to the next iteration of the loop
         }
-
-        if (existingProduct) {
-          product.status = false;
-          product.message = "Product already exists";
-        }
-        if (!product.category_id) {
-          product.status = false;
-          product.message = "Category ID is required";
-        } else {
-          const category = await CategoryTable.findByPk(product.category_id); //make this syncronous for testing and remove async in the loop
-          if (!category) {
-            product.status = false;
-            product.message = "Category does not exist";
-          }
-        }
-
-        return product;
+      } else {
+        product.status = false;
+        product.message = `Size must be in this ${validSizes.join(", ")}`;
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
       }
-    );
+    
+      if (existingProduct) {
+        product.status = false;
+        product.message = "Product already exists";
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
+      }
+
+      if (product.offer_price !== '') {
+        if (!Number(product.offer_price) || Number(product.offer_price) <= 0) {
+          product.status = false;
+          product.message = "Offer price must be greater than zero";
+          modifiedProductsPromises.push(Promise.resolve(product));
+          continue; // Move to the next iteration of the loop
+        }
+      } else {
+        product.offer_price = 0;
+      }
+    
+      if (!product.category_id) {
+        product.status = false;
+        product.message = "Category ID is required";
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
+      } else {
+        const category = await CategoryTable.findByPk(product.category_id);
+        console.log("222222",product.product_title)
+        if (!category) {
+
+          product.status = false;
+          product.message = "Category does not exist";
+          modifiedProductsPromises.push(Promise.resolve(product));
+          continue; // Move to the next iteration of the loop
+        }
+      }
+
+    
+      product.status = true;
+      product.message = "Success";
+      modifiedProductsPromises.push(Promise.resolve(product));
+    }
 
     const modifiedProducts = await Promise.all(modifiedProductsPromises);
     console.log(modifiedProducts);
@@ -323,7 +347,7 @@ async function _createBulkProductsService(req: any, res: Response) {
           : data[index - 1].SKU
       );
     });
-    let productCreateResponse: any = "";
+    let productCreateResponse: any = [];
     if (successfulProducts.length) {
       productCreateResponse = await ProductTable.bulkCreate(successfulProducts);
     }
