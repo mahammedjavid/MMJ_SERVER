@@ -303,13 +303,13 @@ async function _createBulkProductsService(req: any, res: Response) {
 
     const s3Link = "s3link"; // await uploadToS3(file.fileBuffer, file.originalname, file.fileType);
     const bulk = {
-      fileName: req.file.originalname,
+      fileName: req?.file?.originalname || 'file',
       fileLink: s3Link,
       message: "Uploaded successfully",
       customer_id: user.customer_id,
     };
 
-    const bulkUploadResponse = await BulkUploadTable.create(bulk);
+    const bulkUploadResponse = await BulkUploadTable.create(bulk); //comment this line for testing
     const successfulProducts = modifiedProducts.filter(
       (product) => product.status && product.message == "Success"
     );
