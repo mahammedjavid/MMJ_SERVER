@@ -45,6 +45,10 @@ const ProductSchema = (sequelize: Sequelize) => {
                 type: DataTypes.TEXT,
                 allowNull: false,
             }, 
+            offer_price: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+            },
         }, {
             timestamps: true,
         }

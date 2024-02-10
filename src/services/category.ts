@@ -32,7 +32,7 @@ async function _createCategoryService(req: any) {
     // For single image upload
     // let uploadedImage = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
 
-    let uploadedImage = req.file.originalname
+    let uploadedImage = req?.file?.originalname
     // Create the category in the database
     const newCategory = await CategoryTable.create({
       category_image: uploadedImage,
