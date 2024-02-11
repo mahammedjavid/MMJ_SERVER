@@ -13,6 +13,7 @@ import { getTheUserInfoFromJwt } from "../helper/getTheUserInfoFromAccessToken";
 import { validatePayload } from "../helper/payloadValidation";
 import generateNextSequentialID from "../utils/generateSKU";
 import { isValidSize, validSizes } from "../utils/func";
+import { Op } from "sequelize";
 
 async function _createProductService(req: any, res: Response) {
   try {
@@ -101,12 +102,25 @@ async function _createProductService(req: any, res: Response) {
 }
 
 // Product list service
-async function _getProductListService(res: Response) {
+async function _getProductListService(req: Request, res: Response) {
   try {
-    let where_clause = {
+
+    const categoryId = req.query.category_id
+
+    const searchTerm = req.query.query
+
+    let where_clause: { isActive: boolean;[key: string]: any } = {
       isActive: true,
     };
-    // Fetch the list of products from the database
+
+    if (categoryId) {
+      where_clause['category_id'] = categoryId;
+    }
+
+    if (searchTerm) {
+      where_clause['product_title'] = { [Op.iLike]: `%${searchTerm}%` }
+    }
+
     const productList = await ProductTable.findAll({
       where: where_clause,
       include: [CategoryTable],
@@ -210,20 +224,21 @@ async function _updateProductService(req: Request, res: Response) {
 }
 
 // Deactivate product service
-async function _deactivateProductService(req: Request, res: Response) {
+async function _activateDeactivateProductService(req: Request, res: Response) {
   const productId = req.params.id;
+  const activate = req.params.activate
   try {
     const product: any = await ProductTable.findByPk(productId);
     if (!product) {
       throw new Error("Product not found");
     }
 
-    product.isActive = false; // Deactivate the product
+    product.isActive = activate;
     await product.save();
 
     return;
   } catch (error) {
-    console.error("Error in _deactivateProductService:", error);
+    console.error("Error in _activateDeactivateProductService:", error);
     throw error;
   }
 }
@@ -247,8 +262,7 @@ async function _createBulkProductsService(req: any, res: Response) {
 
     for (let index = 0; index < data.length; index++) {
       const product = data[index];
-      console.log("1111111111111111",product.product_title)
-      const existingProduct = allProduct.find((existing:any) => existing.SKU === product.SKU);
+      const existingProduct = allProduct.find((existing: any) => existing.SKU === product.SKU);
     
       if (isNaN(Number(product.price)) || Number(product.price) < 0) {
         product.status = false;
@@ -256,12 +270,12 @@ async function _createBulkProductsService(req: any, res: Response) {
         modifiedProductsPromises.push(Promise.resolve(product));
         continue; // Move to the next iteration of the loop
       }
-    
+
       if (product.size) {
         const sizeList = product.size.split(",");
-        if (sizeList.every((s:any) => isValidSize(s))) {
+        if (sizeList.every((s: any) => isValidSize(s))) {
           product.status = true;
-          product.size = sizeList.map((s:any) => s.toUpperCase()).join(",");
+          product.size = sizeList.map((s: any) => s.toUpperCase()).join(",");
         } else {
           product.status = false;
           product.message = `Size must be in this ${validSizes.join(", ")}`;
@@ -274,7 +288,7 @@ async function _createBulkProductsService(req: any, res: Response) {
         modifiedProductsPromises.push(Promise.resolve(product));
         continue; // Move to the next iteration of the loop
       }
-    
+
       if (existingProduct) {
         product.status = false;
         product.message = "Product already exists";
@@ -292,7 +306,7 @@ async function _createBulkProductsService(req: any, res: Response) {
       } else {
         product.offer_price = 0;
       }
-    
+
       if (!product.category_id) {
         product.status = false;
         product.message = "Category ID is required";
@@ -300,7 +314,7 @@ async function _createBulkProductsService(req: any, res: Response) {
         continue; // Move to the next iteration of the loop
       } else {
         const category = await CategoryTable.findByPk(product.category_id);
-        console.log("222222",product.product_title)
+        console.log("222222", product.product_title)
         if (!category) {
 
           product.status = false;
@@ -310,7 +324,7 @@ async function _createBulkProductsService(req: any, res: Response) {
         }
       }
 
-    
+
       product.status = true;
       product.message = "Success";
       modifiedProductsPromises.push(Promise.resolve(product));
@@ -343,8 +357,8 @@ async function _createBulkProductsService(req: any, res: Response) {
         index === 0 && !lastProduct?.SKU
           ? "MMJ00000"
           : index === 0
-          ? lastProduct?.SKU
-          : data[index - 1].SKU
+            ? lastProduct?.SKU
+            : data[index - 1].SKU
       );
     });
     let productCreateResponse: any = [];
@@ -368,6 +382,6 @@ export {
   _getProductListService,
   _getSingleProductService,
   _updateProductService,
-  _deactivateProductService,
+  _activateDeactivateProductService,
   _createBulkProductsService,
 };

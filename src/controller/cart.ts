@@ -2,13 +2,14 @@ import { NextFunction, Request, Response, Router } from "express";
 import passport from "passport";
 import { _getCartListService, _createCartItemService } from "../services/cart";
 import apiResponse from "../helper/apiResponce";
+import { verifyAccessToken } from "../helper/jwtToken";
 
 const router = Router();
 
 router
   .route("/")
   .get(getAllCartItems)
-  .post(passport.authenticate("jwt", { session: false }), addToCart);
+  .post(verifyAccessToken, addToCart); //passport.authenticate("jwt", { session: false })
 
 function addToCart(req: Request, res: Response, next: NextFunction) {
   _createCartItemService(req)
@@ -22,7 +23,7 @@ function addToCart(req: Request, res: Response, next: NextFunction) {
       );
     })
     .catch((err: Error) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,
@@ -44,7 +45,7 @@ function getAllCartItems(req: Request, res: Response, next: NextFunction) {
       );
     })
     .catch((err: any) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,

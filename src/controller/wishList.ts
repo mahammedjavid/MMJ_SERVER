@@ -2,10 +2,11 @@ import { NextFunction, Response, Request, Router } from "express";
 import passport from 'passport';
 import { _getWishListListService, _createWishListItemService } from "../services/wishList";
 import apiResponse from "../helper/apiResponce";
+import { verifyAccessToken } from "../helper/jwtToken";
 
 const router = Router();
 
-router.route('/').get(getAllWishListItems).post(passport.authenticate('jwt', { session: false }), addToWishList);
+router.route('/').get(getAllWishListItems).post(verifyAccessToken, addToWishList); // passport.authenticate('jwt', { session: false })
 
 function addToWishList(req: Request, res: Response, next: NextFunction) {
     _createWishListItemService(req)
@@ -19,7 +20,7 @@ function addToWishList(req: Request, res: Response, next: NextFunction) {
             );
         })
         .catch((err: any) => {
-            res.json(
+            res.status(500).json(
                 apiResponse({
                     data: "",
                     status: false,
@@ -41,7 +42,7 @@ function getAllWishListItems(req: Request, res: Response, next: NextFunction) {
             );
         })
         .catch((err: Error) => {
-            res.json(
+            res.status(500).json(
                 apiResponse({
                     data: "",
                     status: false,
