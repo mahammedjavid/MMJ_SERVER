@@ -12,7 +12,15 @@ const UserSchema = (sequelize: Sequelize) => {
                 type: DataTypes.STRING,
                 allowNull: false,
             },
+            dob : {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
             email: {
+                type: DataTypes.STRING,
+                allowNull: true,
+            },
+            first_name: {
                 type: DataTypes.STRING,
                 allowNull: true,
             },

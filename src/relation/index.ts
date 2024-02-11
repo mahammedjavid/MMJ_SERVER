@@ -44,8 +44,8 @@ const AddressTable = AddressSchema(sequelize);
 const CategoryTable = CategorySchema(sequelize);
 const BulkUploadTable = BulkUploadSchema(sequelize);
 
-UserTable.hasMany(AddressTable, { foreignKey: "address_id" });
-AddressTable.belongsTo(UserTable, { foreignKey: "address_id" });
+UserTable.hasMany(AddressTable, { foreignKey: "customer_id" });
+AddressTable.belongsTo(UserTable, { foreignKey: "customer_id" });
 
 UserTable.hasMany(OrderTable, { foreignKey: "customer_id" });
 OrderTable.belongsTo(UserTable, { foreignKey: "customer_id" });

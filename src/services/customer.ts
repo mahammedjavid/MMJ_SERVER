@@ -81,6 +81,75 @@ async function verifyOTPService(req: Request) {
   }
 }
 
+async function _resendOtpService(req: Request) {
+  try {
+    const { mobile_number } = req.body;
+
+    if (!mobile_number) {
+      throw new Error("mobile number not found!");
+    }
+
+    let existingUser = await UserTable.findOne({
+      where: { mobile_number: mobile_number },
+    });
+
+    if (!existingUser) {
+      throw new Error("user not found for this mobile number");
+    }
+
+      const otp = generateOTP();
+      sendOTPToUser(existingUser, otp);
+
+      return {
+        data: existingUser,
+        message: "OTP sent succussfully",
+      };
+  } catch (error) {
+    console.error("Error in _resendOtpService:", error);
+    throw error;
+  }
+}
+
+
+async function _updateCustomerInfoService(req: Request) {
+  try {
+    const userID = req.params.id;
+
+    console.log("-----------",userID)
+
+    const { mobile_number, first_name, last_name, dob, email } = req.body;
+
+    if (!userID) {
+      throw new Error("User ID not Found!");
+    }
+
+    let existingUser:any  = await UserTable.findOne({
+      where: { customer_id: userID },
+    });
+
+    if (!existingUser) {
+      throw new Error("User not found with provided id.");
+    }
+
+    // Update user information
+    existingUser.first_name = first_name || existingUser.first_name;
+    existingUser.last_name = last_name || existingUser.last_name;
+    existingUser.dob = dob || existingUser.dob;
+    existingUser.email = email || existingUser.email;
+
+    await existingUser.save();
+
+    return {
+      data: existingUser,
+      message: "User information updated successfully",
+    };
+  } catch (error) {
+    console.error("Error in _updateCustomerInfoService:", error);
+    throw error;
+  }
+}
+
+
 async function _getAllUserListervice() {
   try {
     const userData = await UserTable.findAll();
@@ -94,4 +163,30 @@ async function _getAllUserListervice() {
   }
 }
 
-export { verifyOTPService, _createCustomerService, _getAllUserListervice };
+async function _generateNewRefreshTokenService(req: Request) {
+  try {
+    const user = req.user
+    const accessToken = generateAccessToken(user);
+    return {
+      data: accessToken,
+      message: "Access token is generated succusfully",
+    };
+  } catch (error) {
+    console.error("Error in _generateNewRefreshTokenService:", error);
+    throw error;
+  }
+}
+async function _logOutService(req: Request) {
+  try {
+    return {
+      data: '',
+      message: "Logout Successfull",
+    };
+  } catch (error) {
+    console.error("Error in _logOutService:", error);
+    throw error;
+  }
+}
+
+
+export { verifyOTPService, _createCustomerService, _getAllUserListervice , _updateCustomerInfoService , _generateNewRefreshTokenService , _resendOtpService , _logOutService };
