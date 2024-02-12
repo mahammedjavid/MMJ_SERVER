@@ -9,11 +9,9 @@ function passPOrtAuth(passport) {
         jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
     };
     passport.use(new passport_jwt_1.Strategy(params, async (jwt_payload, done) => {
-        console.log("params",params)
-        console.log("payload",jwt_payload.userDetails.mobile_number)
         try {
             const user = await index_1.UserTable.findOne({
-                where: { mobile_number: jwt_payload.userDetails.mobile_number },
+                where: { mobile_number: jwt_payload.mobile_number },
             });
             if (user) {
                 done(null, user);
