@@ -8,13 +8,13 @@ import { passPOrtAuth } from "../helper/passportAuth";
 const router = Router();
 // passPOrtAuth(passport)
 router.route("/").get(verifyAccessToken , getAllUserList) //passport.authenticate('jwt', { session: false })
-router.route('/:id').put(updateCustomerInfo);
+router.route('/:id').put(verifyAccessToken,updateCustomerInfo);
 
 router.post("/login", createCustomer);
 router.post("/verify-otp", verifyOTP);
 router.post("/resend-otp", resendOTP);
 router.post('/refresh' , verifyRefreshToken ,getNewTokens)
-router.get('/logout' ,logOut)
+router.get('/logout',verifyAccessToken ,logOut)
 
 function createCustomer(req: Request, res: Response, next: NextFunction) {
   _createCustomerService(req)
