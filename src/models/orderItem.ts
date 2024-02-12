@@ -5,9 +5,10 @@ const OrderItemSchema = (sequelize: Sequelize) => {
         "order-item",
         {
             order_item_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                allowNull : false,
+                defaultValue: DataTypes.UUIDV1,
             },
             quantity: {
                 type: DataTypes.INTEGER,

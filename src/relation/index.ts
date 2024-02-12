@@ -10,6 +10,7 @@ import WishlistSchema from "../models/wishList";
 import AddressSchema from "../models/address";
 import CategorySchema from "../models/category";
 import BulkUploadSchema from "../models/bulkUploadResponce";
+import reviewSchema from "../models/reviews"
 
 const {
   DB_USER = "",
@@ -43,6 +44,7 @@ const WishlistTable = WishlistSchema(sequelize);
 const AddressTable = AddressSchema(sequelize);
 const CategoryTable = CategorySchema(sequelize);
 const BulkUploadTable = BulkUploadSchema(sequelize);
+const reviewsTable = reviewSchema(sequelize);
 
 UserTable.hasMany(AddressTable, { foreignKey: "customer_id" });
 AddressTable.belongsTo(UserTable, { foreignKey: "customer_id" });
@@ -76,11 +78,17 @@ ProductTable.hasMany(CartTable, { foreignKey: "product_id" });
 WishlistTable.belongsTo(ProductTable, { foreignKey: "product_id" });
 ProductTable.hasMany(WishlistTable, { foreignKey: "product_id" });
 
+UserTable.hasMany(reviewsTable, { foreignKey: 'customer_id' });
+reviewsTable.belongsTo(UserTable, { foreignKey: 'customer_id' });
+
+ProductTable.hasMany(reviewsTable, { foreignKey: 'product_id' });
+reviewsTable.belongsTo(ProductTable, { foreignKey: 'product_id' });
+
 sequelize
   .authenticate()
   .then(() => console.log("db is connected"))
   .catch((err: SequelizeScopeError) =>
-    console.log("------------------------" + err)
+    console.log("--------------------" + err)
   );
 
 sequelize
@@ -104,4 +112,5 @@ export {
   AddressTable,
   CategoryTable,
   BulkUploadTable,
+  reviewsTable
 };

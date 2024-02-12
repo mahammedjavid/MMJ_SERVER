@@ -4,9 +4,10 @@ const WishlistSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "wishlist", {
             wishlist_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                allowNull : false,
+                defaultValue: DataTypes.UUIDV1,
             },
         }, {
             timestamps: true,

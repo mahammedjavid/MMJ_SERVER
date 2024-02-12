@@ -4,9 +4,10 @@ const AddressSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "address", {
             address_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                allowNull : false,
+                defaultValue: DataTypes.UUIDV1,
             },
             add_type: {
                 type: DataTypes.STRING,

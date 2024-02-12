@@ -24,36 +24,49 @@ async function _createCartItemService(req: Request) {
       throw new Error("Product not found");
     }
 
-    if(product.stock < quantity){
+    if (product.stock < quantity) {
       throw new Error("Insufficient quantity in stock");
     }
 
-    const existingCartItem: any = await CartTable.findOne({
-      where: {
-        customer_id,
-        product_id,
-      },
-    });
-
-    let  cartItem
-    if (existingCartItem) {
-      // If the same product is already in the cart, increase the quantity
-      existingCartItem.quantity += Number(quantity);
-      cartItem = await existingCartItem.save();
-    } else {
-      // If the product is not in the cart, create a new cart item
-      cartItem = await CartTable.create({
-        customer_id,
-        product_id,
-        quantity,
+    if (quantity == 0) {
+      // If the quantity is zero, call the delete cart API
+      const response = await fetch(`http://localhost:4321/api/cart/${customer_id}/${product_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+      const data = await response.json();
+      return { data : data.data , message: data.message , };
+    } else {
+      const existingCartItem: any = await CartTable.findOne({
+        where: {
+          customer_id,
+          product_id,
+        },
+      });
+
+      let cartItem
+      if (existingCartItem) {
+        // If the same product is already in the cart, increase the quantity
+        existingCartItem.quantity += Number(quantity);
+        cartItem = await existingCartItem.save();
+      } else {
+        // If the product is not in the cart, create a new cart item
+        cartItem = await CartTable.create({
+          customer_id,
+          product_id,
+          quantity,
+        });
+      }
+      // Reduce the stock quantity in the product table //! for now reducing stock only when user buys the product
+      // await reduceStock(product, Number(quantity));
+      return {
+        data: cartItem,
+        message: "Item is added to the cart",
+      };
     }
-    // Reduce the stock quantity in the product table
-    await reduceStock(product, Number(quantity));
-    return {
-      data: cartItem,
-      message: "Item is added to the cart",
-    };
+
   } catch (error) {
     console.error("Error in _createCartItemService:", error);
     throw error;
@@ -83,4 +96,30 @@ async function _getCartListService(req: Request) {
   }
 }
 
-export { _createCartItemService, _getCartListService };
+async function _removeProductFromCartService(req: Request) {
+  try {
+    const { customer_id, product_id } = req.params;
+    if(!customer_id || !product_id){
+      throw new Error("Product ID and Customer ID is required")
+    }
+    const removedItem = await CartTable.destroy({
+      where: {
+        customer_id,
+        product_id,
+      },
+    });
+
+    if (!removedItem) {
+      throw new Error("Product or User not found")
+    }
+    return {
+      data: removedItem,
+      message: "This item is removed from cart",
+    };
+  } catch (error) {
+    console.error("Error in _removeProductFromCartService:", error);
+    throw error;
+  }
+}
+
+export { _createCartItemService, _getCartListService, _removeProductFromCartService };

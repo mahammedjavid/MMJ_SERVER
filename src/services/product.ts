@@ -25,6 +25,7 @@ async function _createProductService(req: any, res: Response) {
       category_id,
       product_other_info,
       size,
+      product_image
     } = req.body;
 
     const requiredFields = [
@@ -54,19 +55,19 @@ async function _createProductService(req: any, res: Response) {
     //   price,
     //   stock,
     // });
-    let uploadedImageUrls: any = [];
+
     // !For multiple image upload
-    req.files.map(async (file: any) => {
-      // let image = await uploadToS3(file.buffer, file.originalname,file.mimetype) //s3 link
-      let image = file.originalname; // for testing purposes
-      uploadedImageUrls.push(image);
-    });
+    // let uploadedImageUrls: any = [];
+    // req.files.map(async (file: any) => {
+    // let image = await uploadToS3(file.buffer, file.originalname,file.mimetype) //s3 link
+    // uploadedImageUrls.push(image);
+    // });
     let lastProduct: any = await ProductTable.findOne({
       order: [["SKU", "DESC"]],
     });
     const SKU = generateNextSequentialID(lastProduct?.SKU || "MMJ00000");
     const modifiedProduct = {
-      product_images: uploadedImageUrls.join(","),
+      product_images: Array.isArray(product_image) ? product_image?.join(",") : product_image,
       product_title,
       SKU,
       product_description,
@@ -96,7 +97,7 @@ async function _createProductService(req: any, res: Response) {
       message: "Product Created successfully",
     };
   } catch (error) {
-    console.error("Error in _createCustomerService:", error);
+    console.error("Error in _createProductService:", error);
     throw error;
   }
 }
@@ -132,17 +133,19 @@ async function _getProductListService(req: Request, res: Response) {
 
 
     if (type) {
-      let product_section : any = {
-        column : '',
-        value : ''
+      let product_section: any = {
+        column: '',
+        value: ''
       }
       switch (type) {
         case 'discount':
           product_section.column = 'offer_price'
-          product_section.value = { [Op.and]: [
-            { [Op.not]: null },
-            { [Op.ne]: 0 },
-          ],  }
+          product_section.value = {
+            [Op.and]: [
+              { [Op.not]: null },
+              { [Op.ne]: 0 },
+            ],
+          }
           break;
 
         default:
@@ -150,7 +153,7 @@ async function _getProductListService(req: Request, res: Response) {
           product_section.value = ''
           break;
       }
-      if(product_section.column && product_section.value) where_clause[product_section.column] = product_section.value;
+      if (product_section.column && product_section.value) where_clause[product_section.column] = product_section.value;
     }
 
     let options: any = {
@@ -252,6 +255,7 @@ async function _updateProductService(req: Request, res: Response) {
     //   product.product_images = updatedImageUrls;
     // }
     // Update other fields if needed
+    product.product_images = updatedData.product_image && Array.isArray(updatedData.product_image) ? updatedData.product_image.join(',') : updatedData.product_image ? updatedData.product_image : product.product_images;
     product.product_other_info =
       updatedData.product_other_info || product.product_other_info;
     product.price = updatedData.price || product.price;
@@ -284,18 +288,32 @@ async function _updateProductService(req: Request, res: Response) {
 
 // Deactivate product service
 async function _activateDeactivateProductService(req: Request, res: Response) {
-  const productId = req.params.id;
-  const activate = req.params.activate
+
+  const {
+    product_id,
+    status,
+  } = req.body;
+
+  const requiredFields = [
+    "product_id",
+    "status"
+  ];
+  validatePayload(req.body, requiredFields);
+
+  if (status != 'true' && status != 'false') throw new Error("Invalid Input for status")
+
   try {
-    const product: any = await ProductTable.findByPk(productId);
+    const product: any = await ProductTable.findByPk(product_id);
     if (!product) {
       throw new Error("Product not found");
     }
 
-    product.isActive = activate;
+    product.isActive = status;
     await product.save();
 
-    return;
+    return {
+      message: "Product" + " " + (status === 'true' ? "Activated" : "Deactivated") + " " + "Successfully"
+    };
   } catch (error) {
     console.error("Error in _activateDeactivateProductService:", error);
     throw error;
@@ -400,15 +418,6 @@ async function _createBulkProductsService(req: any, res: Response) {
       content
     )}`;
 
-    const s3Link = "s3link"; // await uploadToS3(file.fileBuffer, file.originalname, file.fileType);
-    const bulk = {
-      fileName: req?.file?.originalname || 'file',
-      fileLink: s3Link,
-      message: "Uploaded successfully",
-      customer_id: user.customer_id,
-    };
-
-    const bulkUploadResponse = await BulkUploadTable.create(bulk); //comment this line for testing
     const successfulProducts = modifiedProducts.filter(
       (product) => product.status && product.message == "Success"
     );
@@ -422,6 +431,16 @@ async function _createBulkProductsService(req: any, res: Response) {
             : data[index - 1].SKU
       );
     });
+
+    const s3Link = "s3link"; // await uploadToS3(file.fileBuffer, file.originalname, file.fileType);
+    const bulk = {
+      fileName: req?.file?.originalname || 'file',
+      fileLink: s3Link,
+      message: "Uploaded successfully",
+      customer_id: user.customer_id,
+    };
+
+    const bulkUploadResponse = await BulkUploadTable.create(bulk); //comment this line for testing
     let productCreateResponse: any = [];
     if (successfulProducts.length) {
       productCreateResponse = await ProductTable.bulkCreate(successfulProducts);

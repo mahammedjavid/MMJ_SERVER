@@ -6,7 +6,8 @@ const CategorySchema = (sequelize: Sequelize) => {
             category_id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
-                autoIncrement: true,
+                allowNull : false,
+                autoIncrement : true
             },
             category_name: {
                 type: DataTypes.STRING,
@@ -14,7 +15,7 @@ const CategorySchema = (sequelize: Sequelize) => {
             },
             category_image: {
                 type: DataTypes.STRING,
-                allowNull: false,
+                allowNull: true,
             },
         }, {
             timestamps: true,

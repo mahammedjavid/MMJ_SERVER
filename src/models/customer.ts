@@ -4,9 +4,10 @@ const UserSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "customer_details", {
             customer_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
+                defaultValue: DataTypes.UUIDV1,
+                allowNull : false,
                 primaryKey: true,
-                autoIncrement: true,
             },
             mobile_number: {
                 type: DataTypes.STRING,

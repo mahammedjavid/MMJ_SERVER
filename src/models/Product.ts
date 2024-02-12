@@ -3,9 +3,10 @@ const ProductSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "product", {
             product_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                allowNull : false,
+                defaultValue: DataTypes.UUIDV1,
             },
             product_title: {
                 type: DataTypes.STRING,

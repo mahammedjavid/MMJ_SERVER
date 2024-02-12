@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { _getBulkResponceService } from "../services/bulkUploadResponce";
 import apiResponse from "../helper/apiResponce";
+import { verifyAccessToken } from "../helper/jwtToken";
 
 const router = Router();
 
-router.route("/").get(getAllBulkresponce);
+router.route("/").get(verifyAccessToken,getAllBulkresponce);
 
 function getAllBulkresponce(req: Request, res: Response, next: NextFunction) {
   _getBulkResponceService()

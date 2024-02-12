@@ -4,9 +4,10 @@ const PaymentSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "payment", {
             payment_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                allowNull : false,
+                defaultValue: DataTypes.UUIDV1,
             },
             payment_date: {
                 type: DataTypes.DATE,
