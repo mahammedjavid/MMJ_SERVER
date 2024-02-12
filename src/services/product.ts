@@ -418,15 +418,6 @@ async function _createBulkProductsService(req: any, res: Response) {
       content
     )}`;
 
-    const s3Link = "s3link"; // await uploadToS3(file.fileBuffer, file.originalname, file.fileType);
-    const bulk = {
-      fileName: req?.file?.originalname || 'file',
-      fileLink: s3Link,
-      message: "Uploaded successfully",
-      customer_id: user.customer_id,
-    };
-
-    const bulkUploadResponse = await BulkUploadTable.create(bulk); //comment this line for testing
     const successfulProducts = modifiedProducts.filter(
       (product) => product.status && product.message == "Success"
     );
@@ -437,9 +428,19 @@ async function _createBulkProductsService(req: any, res: Response) {
           ? "MMJ00000"
           : index === 0
             ? lastProduct?.SKU
-            : data[index - 1].SKU
+            : data[index + 1].SKU
       );
     });
+
+    const s3Link = "s3link"; // await uploadToS3(file.fileBuffer, file.originalname, file.fileType);
+    const bulk = {
+      fileName: req?.file?.originalname || 'file',
+      fileLink: s3Link,
+      message: "Uploaded successfully",
+      customer_id: user.customer_id,
+    };
+
+    const bulkUploadResponse = await BulkUploadTable.create(bulk); //comment this line for testing
     let productCreateResponse: any = [];
     if (successfulProducts.length) {
       productCreateResponse = await ProductTable.bulkCreate(successfulProducts);
