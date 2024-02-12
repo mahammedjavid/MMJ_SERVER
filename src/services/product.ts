@@ -109,6 +109,15 @@ async function _getProductListService(req: Request, res: Response) {
 
     const searchTerm = req.query.query
 
+    const page = req.query.page ? parseInt(req.query.page as string) : null;
+
+    const pageSize = req.query.page_size ? parseInt(req.query.page_size as string) : null;
+
+    const type = req.query.type
+
+    const sortBy = req.query.sort_by;
+
+
     let where_clause: { isActive: boolean;[key: string]: any } = {
       isActive: true,
     };
@@ -121,12 +130,62 @@ async function _getProductListService(req: Request, res: Response) {
       where_clause['product_title'] = { [Op.iLike]: `%${searchTerm}%` }
     }
 
-    const productList = await ProductTable.findAll({
+
+    if (type) {
+      let product_section : any = {
+        column : '',
+        value : ''
+      }
+      switch (type) {
+        case 'discount':
+          product_section.column = 'offer_price'
+          product_section.value = { [Op.and]: [
+            { [Op.not]: null },
+            { [Op.ne]: 0 },
+          ],  }
+          break;
+
+        default:
+          product_section.column = ''
+          product_section.value = ''
+          break;
+      }
+      if(product_section.column && product_section.value) where_clause[product_section.column] = product_section.value;
+    }
+
+    let options: any = {
       where: where_clause,
       include: [CategoryTable],
+    };
+
+    if (sortBy) {
+      switch (sortBy) {
+        case 'latest':
+          options.order = [['updatedAt', 'DESC']];
+          break;
+        case 'oldest':
+          options.order = [['updatedAt', 'ASC']];
+          break;
+        default:
+          delete options.order
+          break;
+      }
+    }
+
+    if (page && pageSize) {
+      const offset = (page - 1) * pageSize;
+      options.offset = offset;
+      options.limit = pageSize;
+    }
+
+    const totalCount = await ProductTable.count({
+      where: where_clause,
     });
+
+    const productList = await ProductTable.findAll(options);
     return {
       data: productList,
+      totalCount,
       message: "Product list retrieved successfully",
     };
   } catch (error) {
@@ -248,6 +307,8 @@ async function _activateDeactivateProductService(req: Request, res: Response) {
 async function _createBulkProductsService(req: any, res: Response) {
   try {
     const user: any = getTheUserInfoFromJwt(req)?.userDetails;
+
+    console.log("user is", user)
     const allProduct = await ProductTable.findAll();
 
     // new bulk upload flow
@@ -263,7 +324,7 @@ async function _createBulkProductsService(req: any, res: Response) {
     for (let index = 0; index < data.length; index++) {
       const product = data[index];
       const existingProduct = allProduct.find((existing: any) => existing.SKU === product.SKU);
-    
+
       if (isNaN(Number(product.price)) || Number(product.price) < 0) {
         product.status = false;
         product.message = "Price is not valid";

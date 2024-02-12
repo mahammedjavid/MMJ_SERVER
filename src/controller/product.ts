@@ -60,6 +60,7 @@ function getProductList(req:Request, res:Response, next:NextFunction) {
       res.json(
         apiResponse({
           data: result.data,
+          totalCount : result.totalCount,
           status: true,
           message: result.message,
         })

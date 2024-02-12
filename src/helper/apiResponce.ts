@@ -5,6 +5,7 @@ const apiResponse = (payload: any = {}) => {
   const MessageSymbol = Symbol("message");
   const RedirectSymbol = Symbol("redirect");
   const DownloadLinkSymbol = Symbol("downloadLink");
+  const TotalCount = Symbol("totalCount");
   const AccessTokenSymbol = Symbol("access_token");
   const RefreshTokenSymbol = Symbol("refresh_token");
 
@@ -15,6 +16,7 @@ const apiResponse = (payload: any = {}) => {
     private [MessageSymbol]: string;
     private [RedirectSymbol]: string;
     private [DownloadLinkSymbol]: string;
+    private [TotalCount] : string;
     private [AccessTokenSymbol]: string;
     private [RefreshTokenSymbol]: string;
 
@@ -24,6 +26,7 @@ const apiResponse = (payload: any = {}) => {
       errors = [],
       message = "",
       redirect = "",
+      totalCount = "",
       downloadLink = "",
       access_token = "",
       refresh_token = "",
@@ -33,6 +36,7 @@ const apiResponse = (payload: any = {}) => {
       errors?: any[];
       message?: string;
       redirect?: string;
+      totalCount ? : string;
       downloadLink?: string;
       access_token?: string;
       refresh_token?: string;
@@ -42,6 +46,7 @@ const apiResponse = (payload: any = {}) => {
       this[ErrorsSymbol] = errors;
       this[MessageSymbol] = message;
       this[RedirectSymbol] = redirect;
+      this[TotalCount] = totalCount;
       this[DownloadLinkSymbol] = downloadLink;
       this[AccessTokenSymbol] = access_token;
       this[RefreshTokenSymbol] = refresh_token;
@@ -101,6 +106,14 @@ const apiResponse = (payload: any = {}) => {
       this[DownloadLinkSymbol] = downloadLink;
     }
 
+    get totalCount(): string {
+      return this[TotalCount];
+    }
+
+    set totlCount(total_count: string) {
+      this[TotalCount] = total_count;
+    }
+
     get access_token(): string {
       return this[AccessTokenSymbol];
     }
@@ -124,6 +137,7 @@ const apiResponse = (payload: any = {}) => {
       message: string;
       redirect: string;
       downloadLink?: string;
+      totalCount?:string;
       access_token?: string;
       refresh_token?: string;
     } {
@@ -137,6 +151,9 @@ const apiResponse = (payload: any = {}) => {
       // Add variable to the response if it's provided
       if (this[DownloadLinkSymbol]) {
         responseObj.downloadLink = this[DownloadLinkSymbol];
+      }
+      if (this[TotalCount]) {
+        responseObj.totalCount = this[TotalCount];
       }
       if (this[AccessTokenSymbol]) {
         responseObj.access_token = this[AccessTokenSymbol];
