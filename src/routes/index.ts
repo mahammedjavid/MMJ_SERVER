@@ -6,11 +6,11 @@ import wishListRoute from '../controller/wishList';
 import categoryRoutes from '../controller/category';
 import BulkResponceRoute from '../controller/bulkUploadResponce';
 import { verifyAccessToken } from '../helper/jwtToken'; // used passport for route authorization
-import { passPOrtAuth } from '../helper/passportAuth';
-import passport from 'passport';
+// import { passPOrtAuth } from '../helper/passportAuth';
+// import passport from 'passport';
 
 const app = express();
-passPOrtAuth(passport)
+// passPOrtAuth(passport)
 // passport.authenticate('jwt',{session:false}) //add this middleware to authenticate route
 app.get('/', (req:Request, res:Response) => {
     res.send('Welcome to MMJ Server!');

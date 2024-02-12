@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import { _getcategoryListService, _createCategoryService } from "../services/category";
 import apiResponse from "../helper/apiResponce";
+import { verifyAccessToken } from "../helper/jwtToken";
 
 const router = Router();
 const storage = multer.memoryStorage();
@@ -23,7 +24,7 @@ async function getAllCategory(req: Request, res: Response, next: NextFunction) {
       })
     );
   } catch (err: any) {
-    res.json(
+    res.status(500).json(
       apiResponse({
         data: "",
         status: false,
@@ -45,7 +46,7 @@ async function createCategory(req: Request, res: Response, next: NextFunction) {
       })
     );
   } catch (err: any) {
-    res.json(
+    res.status(500).json(
       apiResponse({
         data: "",
         status: false,

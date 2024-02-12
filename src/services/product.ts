@@ -13,6 +13,7 @@ import { getTheUserInfoFromJwt } from "../helper/getTheUserInfoFromAccessToken";
 import { validatePayload } from "../helper/payloadValidation";
 import generateNextSequentialID from "../utils/generateSKU";
 import { isValidSize, validSizes } from "../utils/func";
+import { Op } from "sequelize";
 
 async function _createProductService(req: any, res: Response) {
   try {
@@ -101,18 +102,90 @@ async function _createProductService(req: any, res: Response) {
 }
 
 // Product list service
-async function _getProductListService(res: Response) {
+async function _getProductListService(req: Request, res: Response) {
   try {
-    let where_clause = {
+
+    const categoryId = req.query.category_id
+
+    const searchTerm = req.query.query
+
+    const page = req.query.page ? parseInt(req.query.page as string) : null;
+
+    const pageSize = req.query.page_size ? parseInt(req.query.page_size as string) : null;
+
+    const type = req.query.type
+
+    const sortBy = req.query.sort_by;
+
+
+    let where_clause: { isActive: boolean;[key: string]: any } = {
       isActive: true,
     };
-    // Fetch the list of products from the database
-    const productList = await ProductTable.findAll({
+
+    if (categoryId) {
+      where_clause['category_id'] = categoryId;
+    }
+
+    if (searchTerm) {
+      where_clause['product_title'] = { [Op.iLike]: `%${searchTerm}%` }
+    }
+
+
+    if (type) {
+      let product_section : any = {
+        column : '',
+        value : ''
+      }
+      switch (type) {
+        case 'discount':
+          product_section.column = 'offer_price'
+          product_section.value = { [Op.and]: [
+            { [Op.not]: null },
+            { [Op.ne]: 0 },
+          ],  }
+          break;
+
+        default:
+          product_section.column = ''
+          product_section.value = ''
+          break;
+      }
+      if(product_section.column && product_section.value) where_clause[product_section.column] = product_section.value;
+    }
+
+    let options: any = {
       where: where_clause,
       include: [CategoryTable],
+    };
+
+    if (sortBy) {
+      switch (sortBy) {
+        case 'latest':
+          options.order = [['updatedAt', 'DESC']];
+          break;
+        case 'oldest':
+          options.order = [['updatedAt', 'ASC']];
+          break;
+        default:
+          delete options.order
+          break;
+      }
+    }
+
+    if (page && pageSize) {
+      const offset = (page - 1) * pageSize;
+      options.offset = offset;
+      options.limit = pageSize;
+    }
+
+    const totalCount = await ProductTable.count({
+      where: where_clause,
     });
+
+    const productList = await ProductTable.findAll(options);
     return {
       data: productList,
+      totalCount,
       message: "Product list retrieved successfully",
     };
   } catch (error) {
@@ -210,20 +283,21 @@ async function _updateProductService(req: Request, res: Response) {
 }
 
 // Deactivate product service
-async function _deactivateProductService(req: Request, res: Response) {
+async function _activateDeactivateProductService(req: Request, res: Response) {
   const productId = req.params.id;
+  const activate = req.params.activate
   try {
     const product: any = await ProductTable.findByPk(productId);
     if (!product) {
       throw new Error("Product not found");
     }
 
-    product.isActive = false; // Deactivate the product
+    product.isActive = activate;
     await product.save();
 
     return;
   } catch (error) {
-    console.error("Error in _deactivateProductService:", error);
+    console.error("Error in _activateDeactivateProductService:", error);
     throw error;
   }
 }
@@ -232,8 +306,10 @@ async function _deactivateProductService(req: Request, res: Response) {
 
 async function _createBulkProductsService(req: any, res: Response) {
   try {
-    const allProduct = await ProductTable.findAll();
     const user: any = getTheUserInfoFromJwt(req)?.userDetails;
+
+    console.log("user is", user)
+    const allProduct = await ProductTable.findAll();
 
     // new bulk upload flow
     const data = await convertCsvToListOfObject(req.file);
@@ -243,54 +319,77 @@ async function _createBulkProductsService(req: any, res: Response) {
     });
     console.log("last Product ------------------", lastProduct);
 
-    const modifiedProductsPromises = data.map(
-      async (product, index: number) => {
-        //make syncronous for testing
-        const existingProduct: any = allProduct.find(
-          (existing: any) => existing.SKU === product.SKU
-        );
+    const modifiedProductsPromises = [];
 
-        product.status = true;
-        product.message = "Success";
+    for (let index = 0; index < data.length; index++) {
+      const product = data[index];
+      const existingProduct = allProduct.find((existing: any) => existing.SKU === product.SKU);
 
-        if (isNaN(Number(product.price)) || Number(product.price) < 0) {
-          product.status = false;
-          product.message = "Price is not valid";
-        }
+      if (isNaN(Number(product.price)) || Number(product.price) < 0) {
+        product.status = false;
+        product.message = "Price is not valid";
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
+      }
 
-        if (product.size) {
-          let validaSize = false;
-          const sizeList = product.size?.split(",");
-          if (sizeList.every((s: any) => isValidSize(s))) {
-            product.status = true;
-            product.size = sizeList.map((s: any) => s.toUpperCase()).join(",");
-          } else {
-            product.status = false;
-            product.message = `Size must be in this ${validSizes.join(", ")}`;
-          }
+      if (product.size) {
+        const sizeList = product.size.split(",");
+        if (sizeList.every((s: any) => isValidSize(s))) {
+          product.status = true;
+          product.size = sizeList.map((s: any) => s.toUpperCase()).join(",");
         } else {
           product.status = false;
           product.message = `Size must be in this ${validSizes.join(", ")}`;
+          modifiedProductsPromises.push(Promise.resolve(product));
+          continue; // Move to the next iteration of the loop
         }
-
-        if (existingProduct) {
-          product.status = false;
-          product.message = "Product already exists";
-        }
-        if (!product.category_id) {
-          product.status = false;
-          product.message = "Category ID is required";
-        } else {
-          const category = await CategoryTable.findByPk(product.category_id); //make this syncronous for testing and remove async in the loop
-          if (!category) {
-            product.status = false;
-            product.message = "Category does not exist";
-          }
-        }
-
-        return product;
+      } else {
+        product.status = false;
+        product.message = `Size must be in this ${validSizes.join(", ")}`;
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
       }
-    );
+
+      if (existingProduct) {
+        product.status = false;
+        product.message = "Product already exists";
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
+      }
+
+      if (product.offer_price !== '') {
+        if (!Number(product.offer_price) || Number(product.offer_price) <= 0) {
+          product.status = false;
+          product.message = "Offer price must be greater than zero";
+          modifiedProductsPromises.push(Promise.resolve(product));
+          continue; // Move to the next iteration of the loop
+        }
+      } else {
+        product.offer_price = 0;
+      }
+
+      if (!product.category_id) {
+        product.status = false;
+        product.message = "Category ID is required";
+        modifiedProductsPromises.push(Promise.resolve(product));
+        continue; // Move to the next iteration of the loop
+      } else {
+        const category = await CategoryTable.findByPk(product.category_id);
+        console.log("222222", product.product_title)
+        if (!category) {
+
+          product.status = false;
+          product.message = "Category does not exist";
+          modifiedProductsPromises.push(Promise.resolve(product));
+          continue; // Move to the next iteration of the loop
+        }
+      }
+
+
+      product.status = true;
+      product.message = "Success";
+      modifiedProductsPromises.push(Promise.resolve(product));
+    }
 
     const modifiedProducts = await Promise.all(modifiedProductsPromises);
     console.log(modifiedProducts);
@@ -303,13 +402,13 @@ async function _createBulkProductsService(req: any, res: Response) {
 
     const s3Link = "s3link"; // await uploadToS3(file.fileBuffer, file.originalname, file.fileType);
     const bulk = {
-      fileName: req.file.originalname,
+      fileName: req?.file?.originalname || 'file',
       fileLink: s3Link,
       message: "Uploaded successfully",
       customer_id: user.customer_id,
     };
 
-    const bulkUploadResponse = await BulkUploadTable.create(bulk);
+    const bulkUploadResponse = await BulkUploadTable.create(bulk); //comment this line for testing
     const successfulProducts = modifiedProducts.filter(
       (product) => product.status && product.message == "Success"
     );
@@ -319,11 +418,11 @@ async function _createBulkProductsService(req: any, res: Response) {
         index === 0 && !lastProduct?.SKU
           ? "MMJ00000"
           : index === 0
-          ? lastProduct?.SKU
-          : data[index - 1].SKU
+            ? lastProduct?.SKU
+            : data[index - 1].SKU
       );
     });
-    let productCreateResponse: any = "";
+    let productCreateResponse: any = [];
     if (successfulProducts.length) {
       productCreateResponse = await ProductTable.bulkCreate(successfulProducts);
     }
@@ -344,6 +443,6 @@ export {
   _getProductListService,
   _getSingleProductService,
   _updateProductService,
-  _deactivateProductService,
+  _activateDeactivateProductService,
   _createBulkProductsService,
 };

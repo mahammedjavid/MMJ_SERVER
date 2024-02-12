@@ -19,7 +19,7 @@ function passPOrtAuth(passport: PassportStatic): void {
       async (jwt_payload: JwtPayload, done: VerifiedCallback) => {
         try {
           const user = await UserTable.findOne({
-            where: { mobile_number: jwt_payload.mobile_number },
+            where: { mobile_number: jwt_payload?.mobile_number || jwt_payload?.userDetails?.mobile_number },
           });
 
           if (user) {

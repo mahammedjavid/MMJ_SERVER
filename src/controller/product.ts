@@ -5,28 +5,30 @@ import {
   _getSingleProductService,
   _getProductListService,
   _updateProductService,
-  _deactivateProductService,
+  _activateDeactivateProductService,
   _createBulkProductsService
 } from "../services/product";
 import apiResponse from "../helper/apiResponce";
 import multer from "multer";
+import { verifyAccessToken } from "../helper/jwtToken";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const router = Router();
 
 router
   .route("/")
-  .post(passport.authenticate('jwt', { session: false }), upload.array("product_image"), createProduct)
+  .post(verifyAccessToken, upload.array("product_image"), createProduct) //verifyAccessToken
   .get(getProductList);
+
+router.route('/activate/:id/:activate').post(verifyAccessToken, activateDeactivateProduct)
 
 router
   .route("/:id")
   .get(getSingleProduct)
-  .put(passport.authenticate('jwt', { session: false }), upload.array("product_image"), updateProduct)
-  .delete(passport.authenticate('jwt', { session: false }), deactivateProduct);
+  .put(verifyAccessToken, upload.array("product_image"), updateProduct);
 
 // Bulk Upoload
-router.post("/bulk-create", passport.authenticate('jwt', { session: false }), upload.single("productFile"), createBulkProducts);
+router.post("/bulk-create", verifyAccessToken, upload.single("productFile"), createBulkProducts);
 
 function createProduct(req:Request, res:Response, next:NextFunction) {
   _createProductService(req,res)
@@ -41,7 +43,7 @@ function createProduct(req:Request, res:Response, next:NextFunction) {
       );
     })
     .catch((err:any) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,
@@ -53,18 +55,19 @@ function createProduct(req:Request, res:Response, next:NextFunction) {
 
 // Product list api
 function getProductList(req:Request, res:Response, next:NextFunction) {
-  _getProductListService(res)
+  _getProductListService(req,res)
     .then((result:any) => {
       res.json(
         apiResponse({
           data: result.data,
+          totalCount : result.totalCount,
           status: true,
           message: result.message,
         })
       );
     })
     .catch((err:any) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,
@@ -86,7 +89,7 @@ function getSingleProduct(req:Request, res:Response, next:NextFunction) {
       );
     })
     .catch((err:any) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,
@@ -108,7 +111,7 @@ function updateProduct(req:Request, res:Response, next:NextFunction) {
       );
     })
     .catch((err:any) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,
@@ -119,16 +122,15 @@ function updateProduct(req:Request, res:Response, next:NextFunction) {
 }
 
 //Deactivateproduct
-async function deactivateProduct(req:Request, res:Response, next:NextFunction) {
-  const productId = req.params.id;
+async function activateDeactivateProduct(req:Request, res:Response, next:NextFunction) {
   try {
-    await _deactivateProductService(req,res);
+    await _activateDeactivateProductService(req,res);
     res.json(apiResponse({
       status: true,
-      message: "Product deactivated successfully",
+      message: req.params.activate === 'true' ? 'Product activated Successfully ' : req.params.activate === 'false' ? 'Product deactivated Successfully' : '',
     }));
   } catch (err:any) {
-    res.json(apiResponse({
+    res.status(500).json(apiResponse({
       status: false,
       message: err.message,
     }));
@@ -149,7 +151,7 @@ function createBulkProducts(req:Request, res:Response, next:NextFunction) {
       );
     })
     .catch((err:any) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,

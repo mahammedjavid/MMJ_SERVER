@@ -18,7 +18,7 @@ function getAllBulkresponce(req: Request, res: Response, next: NextFunction) {
       );
     })
     .catch((err: Error) => {
-      res.json(
+      res.status(500).json(
         apiResponse({
           data: "",
           status: false,

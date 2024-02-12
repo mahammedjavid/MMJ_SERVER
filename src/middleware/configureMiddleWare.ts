@@ -12,7 +12,7 @@ configureMiddleware = (app:express.Application) => {
   app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
   app.use(express.json());
   app.use(compression());
-  app.use(passport.initialize());
+  // app.use(passport.initialize()); //using jwt 
 };
 
 export {configureMiddleware};
