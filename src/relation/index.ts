@@ -80,7 +80,7 @@ sequelize
   .authenticate()
   .then(() => console.log("db is connected"))
   .catch((err: SequelizeScopeError) =>
-    console.log("------------------------" + err)
+    console.log("---------------------" + err)
   );
 
 sequelize
