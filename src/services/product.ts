@@ -428,7 +428,7 @@ async function _createBulkProductsService(req: any, res: Response) {
           ? "MMJ00000"
           : index === 0
             ? lastProduct?.SKU
-            : data[index + 1].SKU
+            : data[index - 1].SKU
       );
     });
 

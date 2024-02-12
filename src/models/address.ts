@@ -6,6 +6,7 @@ const AddressSchema = (sequelize: Sequelize) => {
             address_id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
+                allowNull : false,
                 defaultValue: DataTypes.UUIDV1,
             },
             add_type: {

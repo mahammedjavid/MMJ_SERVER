@@ -5,6 +5,7 @@ const ProductSchema = (sequelize: Sequelize) => {
             product_id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
+                allowNull : false,
                 defaultValue: DataTypes.UUIDV1,
             },
             product_title: {

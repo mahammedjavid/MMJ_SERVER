@@ -6,6 +6,7 @@ const OrderSchema = (sequelize: Sequelize) => {
             order_id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
+                allowNull : false,
                 defaultValue: DataTypes.UUIDV1,
             },
             order_date: {

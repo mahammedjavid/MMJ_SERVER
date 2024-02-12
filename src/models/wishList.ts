@@ -6,6 +6,7 @@ const WishlistSchema = (sequelize: Sequelize) => {
             wishlist_id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
+                allowNull : false,
                 defaultValue: DataTypes.UUIDV1,
             },
         }, {
