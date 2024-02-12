@@ -41,6 +41,10 @@ const ProductSchema = (sequelize: Sequelize) => {
                 allowNull: false,
                 defaultValue: true,
             },
+            available_location_pincode: {
+                type: DataTypes.TEXT,
+                allowNull: true,
+            },
             size: {
                 type: DataTypes.TEXT,
                 allowNull: false,

@@ -25,6 +25,7 @@ async function _createProductService(req: any, res: Response) {
       category_id,
       product_other_info,
       size,
+      available_location_pincode
     } = req.body;
 
     const requiredFields = [
@@ -77,6 +78,7 @@ async function _createProductService(req: any, res: Response) {
       size: Array.isArray(size)
         ? size.map((s) => s.toUpperCase())?.join(",")
         : size.toUpperCase(),
+        available_location_pincode : available_location_pincode?.join(',')
     };
     let existingProduct = await ProductTable.findOne({
       where: { SKU },
@@ -96,7 +98,7 @@ async function _createProductService(req: any, res: Response) {
       message: "Product Created successfully",
     };
   } catch (error) {
-    console.error("Error in _createCustomerService:", error);
+    console.error("Error in _createProductService:", error);
     throw error;
   }
 }
@@ -258,6 +260,7 @@ async function _updateProductService(req: Request, res: Response) {
     product.stock = updatedData.stock || product.stock;
     product.category_id = updatedData.category_id || product.category_id;
     product.product_title = updatedData.product_title || product.product_title;
+    product.available_location_pincode = (Array.isArray(updatedData.available_location_pincode) ? updatedData.available_location_pincode?.join(',') : updatedData.available_location_pincode) || product.available_location_pincode;
     product.product_description =
       updatedData.product_description || product.product_description;
     product.size = Array.isArray(updatedsize)
