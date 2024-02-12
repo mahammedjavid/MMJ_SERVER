@@ -5,9 +5,9 @@ const ShipmentSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "shipment", {
             shipment_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                defaultValue: DataTypes.UUIDV1,
             },
             shipment_date: {
                 type: DataTypes.DATE,

@@ -4,9 +4,9 @@ const CartSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "cart", {
             cart_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                defaultValue: DataTypes.UUIDV1,
             },
             quantity: {
                 type: DataTypes.INTEGER,

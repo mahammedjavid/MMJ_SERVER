@@ -3,9 +3,9 @@ import { DataTypes, Sequelize } from "sequelize";
 const BulkUploadTable = (sequelize: Sequelize) => {
   return sequelize.define("BulkUpload", {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true,
+      defaultValue: DataTypes.UUIDV1,
     },
     fileName: {
       type: DataTypes.STRING,

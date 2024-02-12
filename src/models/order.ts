@@ -4,9 +4,9 @@ const OrderSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "order", {
             order_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                defaultValue: DataTypes.UUIDV1,
             },
             order_date: {
                 type: DataTypes.DATE,
