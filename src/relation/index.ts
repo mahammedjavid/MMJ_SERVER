@@ -84,7 +84,7 @@ sequelize
   );
 
 sequelize
-  .sync({ force: true })
+  .sync({ force: false })
   .then(() => {
     console.log("database connected");
   })
