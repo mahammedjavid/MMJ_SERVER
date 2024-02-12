@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
-import { _getcategoryListService, _createCategoryService , _deleteCategoryService } from "../services/category";
+import { _getcategoryListService, _createCategoryService, _deleteCategoryService } from "../services/category";
 import apiResponse from "../helper/apiResponce";
 import { verifyAccessToken } from "../helper/jwtToken";
 
@@ -11,8 +11,8 @@ const upload = multer({ storage });
 router
   .route("/")
   .get(getAllCategory)
-  .post(upload.single("category_image") ,createCategory)
-router.route("/:category_id").delete(deleteCategory);
+  .post(verifyAccessToken, upload.single("category_image"), createCategory)
+router.route("/:category_id").delete(verifyAccessToken, deleteCategory);
 
 async function getAllCategory(req: Request, res: Response, next: NextFunction) {
   try {

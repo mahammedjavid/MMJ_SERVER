@@ -74,7 +74,34 @@ async function _getWishListListService(req: Request) {
   }
 }
 
-export  {
+async function _removeProductFromWishListService(req: Request) {
+  try {
+    const { customer_id, product_id } = req.params;
+    if (!customer_id || !product_id) {
+      throw new Error("Product ID and Customer ID is required")
+    }
+    const removedItem = await WishlistTable.destroy({
+      where: {
+        customer_id,
+        product_id,
+      },
+    });
+
+    if (!removedItem) {
+      throw new Error("Product or User not found")
+    }
+    return {
+      data: removedItem,
+      message: "This item is removed from Wishlist",
+    };
+  } catch (error) {
+    console.error("Error in _removeProductFromWishListService:", error);
+    throw error;
+  }
+}
+
+export {
   _createWishListItemService,
   _getWishListListService,
+  _removeProductFromWishListService
 };
