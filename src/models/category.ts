@@ -14,7 +14,7 @@ const CategorySchema = (sequelize: Sequelize) => {
             },
             category_image: {
                 type: DataTypes.STRING,
-                allowNull: false,
+                allowNull: true,
             },
         }, {
             timestamps: true,

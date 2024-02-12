@@ -20,7 +20,7 @@ router
   .post(verifyAccessToken, upload.array("product_image"), createProduct) //verifyAccessToken
   .get(getProductList);
 
-router.route('/activate/:id/:activate').post(verifyAccessToken, activateDeactivateProduct)
+router.route('/manage-product').post(verifyAccessToken, activateDeactivateProduct)
 
 router
   .route("/:id")
@@ -122,19 +122,26 @@ function updateProduct(req:Request, res:Response, next:NextFunction) {
 }
 
 //Deactivateproduct
-async function activateDeactivateProduct(req:Request, res:Response, next:NextFunction) {
-  try {
-    await _activateDeactivateProductService(req,res);
-    res.json(apiResponse({
-      status: true,
-      message: req.params.activate === 'true' ? 'Product activated Successfully ' : req.params.activate === 'false' ? 'Product deactivated Successfully' : '',
-    }));
-  } catch (err:any) {
-    res.status(500).json(apiResponse({
-      status: false,
-      message: err.message,
-    }));
-  }
+function activateDeactivateProduct(req:Request, res:Response, next:NextFunction) {
+  _activateDeactivateProductService(req,res)
+    .then((result:any) => {
+      res.json(
+        apiResponse({
+          data: "",
+          status: true,
+          message: result.message,
+        })
+      );
+    })
+    .catch((err:any) => {
+      res.status(500).json(
+        apiResponse({
+          data: "",
+          status: false,
+          message: err.message,
+        })
+      );
+    });
 }
 // ! Bulk Upload 
 // ? Create Product

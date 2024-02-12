@@ -17,7 +17,7 @@ async function _getcategoryListService() {
 
 async function _createCategoryService(req: any) {
   try {
-    const { category_name }: { category_name: string } = req.body;
+    const { category_name , category_image }: { category_name: any , category_image : any } = req.body;
     const requiredFields = ['category_name'];
     validatePayload(req.body, requiredFields);
 
@@ -30,13 +30,12 @@ async function _createCategoryService(req: any) {
     }
 
     // For single image upload
-    // let uploadedImage = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
+    // let uploadedImage = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype); //TODO
 
-    let uploadedImage = req?.file?.originalname
     // Create the category in the database
     const newCategory = await CategoryTable.create({
-      category_image: uploadedImage,
       category_name,
+      category_image
     });
 
     return {
@@ -49,7 +48,29 @@ async function _createCategoryService(req: any) {
   }
 }
 
+async function _deleteCategoryService(req:any) {
+  try {
+    const { category_id }: { category_id: any } = req.params;
+    if(!category_id) throw new Error("Category id is required")
+    let removedItem = await CategoryTable.destroy({
+    where: { category_id },
+    });
+
+    if (!removedItem) {
+      throw new Error("Category not found")
+    }
+    return {
+      data: removedItem,
+      message: "Category is removed successfully",
+    };
+  } catch (error) {
+    console.error('Error in _deleteCategoryService:', error);
+    throw error;
+  }
+}
+
 export  {
   _getcategoryListService,
   _createCategoryService,
+  _deleteCategoryService
 };
