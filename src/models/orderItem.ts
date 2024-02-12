@@ -7,6 +7,7 @@ const OrderItemSchema = (sequelize: Sequelize) => {
             order_item_id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
+                allowNull : false,
                 defaultValue: DataTypes.UUIDV1,
             },
             quantity: {

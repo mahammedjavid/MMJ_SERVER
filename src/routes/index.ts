@@ -5,6 +5,7 @@ import cartRoute from '../controller/cart';
 import wishListRoute from '../controller/wishList';
 import categoryRoutes from '../controller/category';
 import BulkResponceRoute from '../controller/bulkUploadResponce';
+import reviewRoute from '../controller/review'
 import { verifyAccessToken } from '../helper/jwtToken'; // used passport for route authorization
 // import { passPOrtAuth } from '../helper/passportAuth';
 // import passport from 'passport';
@@ -21,5 +22,6 @@ app.use("/cart", cartRoute);
 app.use("/wish-list", wishListRoute);
 app.use('/categories', categoryRoutes);
 app.use('/bulk-responce', BulkResponceRoute);
+app.use("/reviews",reviewRoute)
 
 export default app;

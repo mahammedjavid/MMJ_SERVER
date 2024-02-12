@@ -5,6 +5,7 @@ const BulkUploadTable = (sequelize: Sequelize) => {
     id: {
       type: DataTypes.UUID,
       primaryKey: true,
+      allowNull : false,
       defaultValue: DataTypes.UUIDV1,
     },
     fileName: {

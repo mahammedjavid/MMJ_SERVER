@@ -7,6 +7,7 @@ const ShipmentSchema = (sequelize: Sequelize) => {
             shipment_id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
+                allowNull : false,
                 defaultValue: DataTypes.UUIDV1,
             },
             shipment_date: {

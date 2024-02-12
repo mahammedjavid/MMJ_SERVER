@@ -6,6 +6,7 @@ const UserSchema = (sequelize: Sequelize) => {
             customer_id: {
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV1,
+                allowNull : false,
                 primaryKey: true,
             },
             mobile_number: {
