@@ -4,9 +4,9 @@ const CategorySchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "category", {
             category_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                defaultValue: DataTypes.UUIDV1,
             },
             category_name: {
                 type: DataTypes.STRING,

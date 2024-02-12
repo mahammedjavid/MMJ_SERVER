@@ -3,9 +3,9 @@ const ProductSchema = (sequelize: Sequelize) => {
     return sequelize.define(
         "product", {
             product_id: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 primaryKey: true,
-                autoIncrement: true,
+                defaultValue: DataTypes.UUIDV1,
             },
             product_title: {
                 type: DataTypes.STRING,
