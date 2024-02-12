@@ -46,12 +46,13 @@ async function _getAllReviewsByProductIDService(req: Request) {
     const { product_id } = req.body;
     const requiredFields = ["product_id"];
     validatePayload(req.body, requiredFields);
+
     const product = await ProductTable.findByPk(product_id);
     if (!product) {
       throw new Error("Product not found");
     }
     const reviews = await reviewsTable.findAll({
-      where: { product_id },
+      where: { product_id , isActive : true },
       include: [UserTable],
     });
     return {
@@ -64,25 +65,34 @@ async function _getAllReviewsByProductIDService(req: Request) {
   }
 }
 
-async function _deleteReviewService(req: Request) {
-  try {
-    const { review_id } = req.params;
-    if (!review_id) {
-      throw new Error("Review ID is required");
-    }
-    const removedReview = await reviewsTable.destroy({
-      where: { review_id },
-    });
+async function _activatDeactivateReviewsService(req: Request) {
+  const {
+    review_id,
+    status,
+  } = req.body;
 
-    if (!removedReview) {
+  const requiredFields = [
+    "review_id",
+    "status"
+  ];
+  validatePayload(req.body, requiredFields);
+
+  if (status != 'true' && status != 'false') throw new Error("Invalid Input for status")
+
+  try {
+    const review: any = await reviewsTable.findByPk(review_id);
+    if (!review) {
       throw new Error("Review not found");
     }
+
+    review.isActive = status;
+    await review.save();
+
     return {
-      data: removedReview,
-      message: "Review removed successfully",
+      message: "Review" + " " + (status === 'true' ? "Activated" : "Deleted") + " " + "Successfully"
     };
   } catch (error) {
-    console.error("Error in _deleteReviewService:", error);
+    console.error("Error in _activatDeactivateReviewsService:", error);
     throw error;
   }
 }
@@ -90,5 +100,5 @@ async function _deleteReviewService(req: Request) {
 export {
   _createReviewService,
   _getAllReviewsByProductIDService,
-  _deleteReviewService
+  _activatDeactivateReviewsService
 };

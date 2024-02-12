@@ -21,6 +21,11 @@ const reviewSchema = (sequelize: Sequelize) => {
                 type: DataTypes.FLOAT,
                 allowNull : false,
             },
+            isActive: {
+                type: DataTypes.BOOLEAN,
+                allowNull : false,
+                defaultValue : true
+            },
         }, {
             timestamps: true,
         }
