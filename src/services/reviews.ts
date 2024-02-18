@@ -4,9 +4,9 @@ import { validatePayload } from "../helper/payloadValidation";
 
 async function _createReviewService(req: Request) {
   try {
-    const { customer_id, product_id, review_message, review_images , review_rate } = req.body;
+    const { customer_id, product_id, review_message, review_images, review_rate } = req.body;
 
-    const requiredFields = ["customer_id", "product_id", "review_message" , "review_rate"];
+    const requiredFields = ["customer_id", "product_id", "review_message", "review_rate"];
     validatePayload(req.body, requiredFields);
 
     const user = await UserTable.findByPk(customer_id);
@@ -14,7 +14,7 @@ async function _createReviewService(req: Request) {
       throw new Error("User not found");
     }
 
-    if(parseFloat(review_rate) < 0 || parseFloat(review_rate) > 5){
+    if (parseFloat(review_rate) < 0 || parseFloat(review_rate) > 5) {
       throw new Error("Review rating is not valid");
     }
 
@@ -28,7 +28,7 @@ async function _createReviewService(req: Request) {
       product_id,
       review_message,
       review_rate,
-      review_images: Array.isArray(review_images) ? review_images ?.join(",") : review_images,
+      review_images: Array.isArray(review_images) ? review_images?.join(",") : review_images,
     });
 
     return {
@@ -43,16 +43,17 @@ async function _createReviewService(req: Request) {
 
 async function _getAllReviewsByProductIDService(req: Request) {
   try {
-    const { product_id } = req.body;
-    const requiredFields = ["product_id"];
-    validatePayload(req.body, requiredFields);
+    const { product_id } = req.params;
+    if (!product_id) {
+      throw new Error("Product ID is required")
+    }
 
     const product = await ProductTable.findByPk(product_id);
     if (!product) {
       throw new Error("Product not found");
     }
     const reviews = await reviewsTable.findAll({
-      where: { product_id , isActive : true },
+      where: { product_id, isActive: true },
       include: [UserTable],
     });
     return {
