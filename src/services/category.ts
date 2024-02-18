@@ -50,7 +50,7 @@ async function _createCategoryService(req: any) {
 
 async function _deleteCategoryService(req:any) {
   try {
-    const { category_id }: { category_id: any } = req.params;
+    const { category_id } = req.params;
     if(!category_id) throw new Error("Category id is required")
     let removedItem = await CategoryTable.destroy({
     where: { category_id },
