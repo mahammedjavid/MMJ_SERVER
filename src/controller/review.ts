@@ -8,7 +8,8 @@ const router = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-router.route('/').get(getAllReviewsByProductId).post(upload.array("review_image"), verifyAccessToken, createReview);
+router.route('/').post(upload.array("review_image"), verifyAccessToken, createReview);
+router.route('/:product_id').get(getAllReviewsByProductId);
 router.route('/manage-review').post(verifyAccessToken, _activatDeactivateReviews)
 
 function createReview(req: Request, res: Response, next: NextFunction) {
