@@ -53,9 +53,9 @@ async function _createWishListItemService(req: Request) {
 
 async function _getWishListListService(req: Request) {
   try {
-    const { customer_id, product_id } = req.params;
-    if(!customer_id || !product_id){
-      throw new Error("Product ID and Customer ID is required")
+    const { customer_id } = req.params;
+    if(!customer_id){
+      throw new Error("Customer ID is required")
     }
     const customer = await UserTable.findByPk(customer_id);
     if (!customer) {

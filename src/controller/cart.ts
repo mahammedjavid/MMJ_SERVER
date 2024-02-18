@@ -9,7 +9,8 @@ const router = Router();
 router
   .route("/")
   .post(verifyAccessToken, addToCart)  //passport.authenticate("jwt", { session: false })
-router.route("/:customer_id/:product_id").delete(verifyAccessToken,removeProductFromCart).get(verifyAccessToken,getAllCartItems);
+router.route("/:customer_id").get(verifyAccessToken,getAllCartItems);
+router.route("/:customer_id/:product_id").delete(verifyAccessToken,removeProductFromCart);
 
 function addToCart(req: Request, res: Response, next: NextFunction) {
   _createCartItemService(req)
