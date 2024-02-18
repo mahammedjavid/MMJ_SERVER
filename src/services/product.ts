@@ -5,6 +5,8 @@ import {
   CategoryTable,
   BulkUploadTable,
   UserTable,
+  CartTable,
+  WishlistTable,
 } from "../relation/index";
 import { uploadToS3 } from "../helper/aws.s3-upload";
 import { convertCsvToListOfObject } from "../helper/csvToJson";
@@ -185,9 +187,26 @@ async function _getProductListService(req: Request, res: Response) {
       where: where_clause,
     });
 
-    const productList = await ProductTable.findAll(options);
+    const productList : any = await ProductTable.findAll(options);
+
+    const user = getTheUserInfoFromJwt(req, 'optional')?.userDetails;
+    const userId = user?.customer_id;
+    let userProductPromise:any = []
+    if (userId) {
+      userProductPromise = productList.map(async (product:any) => {
+        const productPlain = { ...product.dataValues };
+        const in_cart = await CartTable.findOne({ where: { customer_id: userId, product_id: product.product_id } }) ? true : false;
+        const in_wishlist =  await WishlistTable.findOne({ where: { customer_id: userId, product_id: product.product_id } }) ? true : false;
+        productPlain.in_cart =  in_cart
+        productPlain.in_wishlist = in_wishlist;
+        return productPlain;
+      });
+    }
+
+    const resolvedUserProducts = await Promise.all(userProductPromise)
+    console.log('productListPlain',resolvedUserProducts)
     return {
-      data: productList,
+      data: resolvedUserProducts.length ? resolvedUserProducts : productList,
       totalCount,
       message: "Product list retrieved successfully",
     };
@@ -210,8 +229,21 @@ async function _getSingleProductService(req: Request, res: Response) {
     if (!product) {
       throw new Error("Product not found");
     }
+
+    const user = getTheUserInfoFromJwt(req, 'optional')?.userDetails;
+    const userId = user?.customer_id;
+
+    let userProduct = null ;
+    
+    if (userId) {
+      userProduct = {...product.dataValues}
+        const in_cart = await CartTable.findOne({ where: { customer_id: userId, product_id: productId } }) ? true : false;
+        const in_wishlist =  await WishlistTable.findOne({ where: { customer_id: userId, product_id: productId } }) ? true : false;
+        userProduct.in_cart =  in_cart
+        userProduct.in_wishlist = in_wishlist;
+    }
     return {
-      data: product,
+      data: userProduct ? userProduct : product,
       message: "Product retrieved successfully",
     };
   } catch (error) {
@@ -324,7 +356,7 @@ async function _activateDeactivateProductService(req: Request, res: Response) {
 
 async function _createBulkProductsService(req: any, res: Response) {
   try {
-    const user: any = getTheUserInfoFromJwt(req)?.userDetails;
+    const user: any = getTheUserInfoFromJwt(req, 'required')?.userDetails;
 
     console.log("user is", user)
     const allProduct = await ProductTable.findAll();
