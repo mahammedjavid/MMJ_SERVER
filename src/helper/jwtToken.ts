@@ -22,7 +22,7 @@ function generateRefreshToken(user: any): string {
 
 function verifyAccessToken(req: Request, res: Response, next: NextFunction) {
   const token = req.headers.authorization;
-  console.log("--------------",token)
+  console.log("-------------- token",token)
   if (!token) {
     return res.status(401).json({ message: "Access token missing." });
   }

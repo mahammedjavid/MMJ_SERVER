@@ -1,4 +1,5 @@
 const validSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
+const cartValidParameter = ['add','remove']
 const isValidSize = (size: string) => {
   if (size) {
     console.log("ppppp",size);
@@ -6,4 +7,10 @@ const isValidSize = (size: string) => {
   }
   return false;
 };
-export { isValidSize, validSizes };
+const checkCartParameter = (param:string)=> {
+  if (param) {
+    return param && cartValidParameter.includes(param);
+  }
+  return false;
+}
+export { isValidSize, validSizes , checkCartParameter };
