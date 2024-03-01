@@ -8,6 +8,7 @@ import BulkResponceRoute from '../controller/bulkUploadResponce';
 import reviewRoute from '../controller/review'
 import addressRoute from '../controller/address'
 import orderRoute from '../controller/order'
+import paymentRoute from '../controller/payment'
 
 import { verifyAccessToken } from '../helper/jwtToken'; // used passport for route authorization
 // import { passPOrtAuth } from '../helper/passportAuth';
@@ -28,5 +29,6 @@ app.use('/bulk-responce', BulkResponceRoute);
 app.use("/reviews",reviewRoute)
 app.use("/address",addressRoute)
 app.use("/order",orderRoute)
+app.use("/payment-gateway",paymentRoute)
 
 export default app;
