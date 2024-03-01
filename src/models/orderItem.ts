@@ -2,7 +2,7 @@ import { DataTypes, Sequelize, Model } from "sequelize";
 
 const OrderItemSchema = (sequelize: Sequelize) => {
     return sequelize.define(
-        "order-item",
+        "orderItem",
         {
             order_item_id: {
                 type: DataTypes.UUID,
@@ -11,10 +11,6 @@ const OrderItemSchema = (sequelize: Sequelize) => {
                 defaultValue: DataTypes.UUIDV1,
             },
             quantity: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
-            price: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },

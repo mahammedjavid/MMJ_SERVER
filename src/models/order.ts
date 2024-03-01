@@ -1,4 +1,5 @@
-import { DataTypes, Sequelize, Model } from "sequelize";
+import { DataTypes, Sequelize } from "sequelize";
+import OrderItemSchema from "./orderItem";
 
 const OrderSchema = (sequelize: Sequelize) => {
     return sequelize.define(
@@ -9,14 +10,15 @@ const OrderSchema = (sequelize: Sequelize) => {
                 allowNull : false,
                 defaultValue: DataTypes.UUIDV1,
             },
-            order_date: {
-                type: DataTypes.DATE,
-                allowNull: false,
-            },
             total_price: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
+            status : {
+                type : DataTypes.STRING,
+                allowNull : false,
+                defaultValue : 'Pending',
+            }
         }, {
             timestamps: true,
         }

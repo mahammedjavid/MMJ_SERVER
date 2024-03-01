@@ -5,7 +5,7 @@ import OrderSchema from "../models/order";
 import OrderItemSchema from "../models/orderItem";
 import PaymentSchema from "../models/paymentModel";
 import ProductSchema from "../models/Product";
-import ShipmentSchema from "../models/shipment";
+// import ShipmentSchema from "../models/shipment";
 import WishlistSchema from "../models/wishList";
 import AddressSchema from "../models/address";
 import CategorySchema from "../models/category";
@@ -39,7 +39,7 @@ const OrderTable = OrderSchema(sequelize);
 const OrderItemTable = OrderItemSchema(sequelize);
 const PaymentTable = PaymentSchema(sequelize);
 const ProductTable = ProductSchema(sequelize);
-const ShipmentTable = ShipmentSchema(sequelize);
+// const ShipmentTable = ShipmentSchema(sequelize);
 const WishlistTable = WishlistSchema(sequelize);
 const AddressTable = AddressSchema(sequelize);
 const CategoryTable = CategorySchema(sequelize);
@@ -66,11 +66,19 @@ BulkUploadTable.belongsTo(UserTable, { foreignKey: "customer_id" });
 ProductTable.belongsTo(CategoryTable, { foreignKey: "category_id" });
 CategoryTable.hasMany(ProductTable, { foreignKey: "category_id" });
 
+
+ProductTable.hasMany(OrderItemTable, { foreignKey: "product_id" });
+OrderItemTable.belongsTo(ProductTable, { foreignKey: "product_id" });
+
 OrderTable.hasMany(OrderItemTable, { foreignKey: "order_id" });
 OrderItemTable.belongsTo(OrderTable, { foreignKey: "order_id" });
 
-OrderTable.hasOne(ShipmentTable, { foreignKey: "order_id" });
-ShipmentTable.belongsTo(OrderTable, { foreignKey: "order_id" });
+
+OrderTable.belongsTo(AddressTable, { foreignKey: "address_id" });
+AddressTable.hasMany(OrderTable, { foreignKey: "address_id" });
+
+// OrderTable.hasOne(ShipmentTable, { foreignKey: "order_id" });
+// ShipmentTable.belongsTo(OrderTable, { foreignKey: "order_id" });
 
 CartTable.belongsTo(ProductTable, { foreignKey: "product_id" });
 ProductTable.hasMany(CartTable, { foreignKey: "product_id" });
@@ -107,7 +115,7 @@ export {
   OrderItemTable,
   PaymentTable,
   ProductTable,
-  ShipmentTable,
+  // ShipmentTable,
   WishlistTable,
   AddressTable,
   CategoryTable,

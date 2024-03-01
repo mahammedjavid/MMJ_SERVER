@@ -6,7 +6,8 @@ import { verifyAccessToken } from "../helper/jwtToken";
 
 const router = Router();
 
-router.route('/').get(verifyAccessToken, getAllWishListItems).post(verifyAccessToken, addToWishList); // passport.authenticate('jwt', { session: false })
+router.route('/').post(verifyAccessToken, addToWishList); // passport.authenticate('jwt', { session: false })
+router.route('/:customer_id').get(verifyAccessToken, getAllWishListItems)
 router.route('/:customer_id/:product_id').delete(verifyAccessToken, removeProductFromWishList)
 
 function addToWishList(req: Request, res: Response, next: NextFunction) {

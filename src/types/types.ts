@@ -75,4 +75,8 @@ interface BulkUploadAttributes {
   fileLink: string;
   message: string;
 }
-export { UploadToS3Params, CsvFile , ProductAttributes, UserAttributes };
+interface orderItem {
+  product_id : string,
+  quantity : number
+} 
+export { UploadToS3Params, CsvFile , ProductAttributes, UserAttributes , orderItem };

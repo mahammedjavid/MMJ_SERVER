@@ -1,18 +1,21 @@
-import { Request, Response, NextFunction, Router } from "express";
-import { createOrderService, _getOrderListService, _updateOrderStatusService } from "../services/order";
-import apiResponse from "../helper/apiResponce";
+import { NextFunction, Request, Response, Router } from "express";
 import { verifyAccessToken } from "../helper/jwtToken";
+import { _createAddressService, _getAddressListService, _updateAddressService, _deleteAddressService } from "../services/address";
+import apiResponse from "../helper/apiResponce";
 
 const router = Router();
 
 router.route("/")
-    .post(verifyAccessToken, createOrder).put(verifyAccessToken, updateOrderStatus)
+    .post(verifyAccessToken, addAddress);
 
+router.route("/:address_id")
+    .put(verifyAccessToken, updateAddress)
+    .delete(verifyAccessToken, deleteAddress);
 router.route("/:customer_id")
-    .get(verifyAccessToken, getAllOrder)
+    .get(verifyAccessToken, getAllAddresses)
 
-function createOrder(req: Request, res: Response, next: NextFunction) {
-    createOrderService(req)
+function addAddress(req: Request, res: Response, next: NextFunction) {
+    _createAddressService(req)
         .then((result: any) => {
             res.json(
                 apiResponse({
@@ -33,8 +36,8 @@ function createOrder(req: Request, res: Response, next: NextFunction) {
         });
 }
 
-function getAllOrder(req: Request, res: Response, next: NextFunction) {
-    _getOrderListService(req)
+function getAllAddresses(req: Request, res: Response, next: NextFunction) {
+    _getAddressListService(req)
         .then((result: any) => {
             res.json(
                 apiResponse({
@@ -55,8 +58,30 @@ function getAllOrder(req: Request, res: Response, next: NextFunction) {
         });
 }
 
-function updateOrderStatus(req: Request, res: Response, next: NextFunction) {
-    _updateOrderStatusService(req)
+function updateAddress(req: Request, res: Response, next: NextFunction) {
+    _updateAddressService(req)
+        .then((result: any) => {
+            res.json(
+                apiResponse({
+                    data: result.data,
+                    status: true,
+                    message: result.message,
+                })
+            );
+        })
+        .catch((err: any) => {
+            res.status(500).json(
+                apiResponse({
+                    data: "",
+                    status: false,
+                    message: err.message,
+                })
+            );
+        });
+}
+
+function deleteAddress(req: Request, res: Response, next: NextFunction) {
+    _deleteAddressService(req)
         .then((result: any) => {
             res.json(
                 apiResponse({
@@ -78,4 +103,3 @@ function updateOrderStatus(req: Request, res: Response, next: NextFunction) {
 }
 
 export default router;
-
