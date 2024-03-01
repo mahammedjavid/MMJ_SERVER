@@ -12,7 +12,11 @@ const CartSchema = (sequelize: Sequelize) => {
             quantity: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-            }
+            },
+            size :{
+                type: DataTypes.STRING,
+                allowNull: false,
+            } 
         }, {
             timestamps: true,
         }
