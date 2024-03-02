@@ -2,13 +2,13 @@ import { NextFunction, Request, Response, Router } from "express";
 import passport from 'passport';
 import apiResponse from "../helper/apiResponce";
 import { verifyAccessToken, verifyRefreshToken } from '../helper/jwtToken'
-import { _createCustomerService , _getAllUserListervice , verifyOTPService, _updateCustomerInfoService , _generateNewRefreshTokenService, _resendOtpService , _logOutService } from '../services/customer'
+import { _createCustomerService , _getAllUserListervice , _getSingleUserService , verifyOTPService, _updateCustomerInfoService , _generateNewRefreshTokenService, _resendOtpService , _logOutService } from '../services/customer'
 import { passPOrtAuth } from "../helper/passportAuth";
 
 const router = Router();
 // passPOrtAuth(passport)
 router.route("/").get(verifyAccessToken , getAllUserList) //passport.authenticate('jwt', { session: false })
-router.route('/:id').put(verifyAccessToken,updateCustomerInfo);
+router.route('/:id').get(verifyAccessToken,getSingleUserById).put(verifyAccessToken,updateCustomerInfo);
 
 router.post("/login", createCustomer);
 router.post("/verify-otp", verifyOTP);
@@ -85,6 +85,27 @@ async function resendOTP(req: Request, res: Response, next: NextFunction) {
 
 function getAllUserList(req: Request, res: Response, next: NextFunction) {
   _getAllUserListervice()
+    .then((result: any) => {
+      res.json(
+        apiResponse({
+          data: result.data,
+          status: true,
+          message: result.message,
+        })
+      );
+    })
+    .catch((err: Error) => {
+      res.status(500).json(
+        apiResponse({
+          data: "",
+          status: false,
+          message: err.message,
+        })
+      );
+    });
+}
+function getSingleUserById(req: Request, res: Response, next: NextFunction) {
+  _getSingleUserService(req)
     .then((result: any) => {
       res.json(
         apiResponse({
