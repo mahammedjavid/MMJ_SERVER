@@ -149,6 +149,33 @@ async function _updateCustomerInfoService(req: Request) {
   }
 }
 
+async function _getSingleUserService(req: Request) {
+  try {
+    const userID = req.params.id;
+
+    console.log("-----------",userID)
+
+    if (!userID) {
+      throw new Error("User ID not Found!");
+    }
+
+    let existingUser:any  = await UserTable.findOne({
+      where: { customer_id: userID },
+    });
+
+    if (!existingUser) {
+      throw new Error("User not found with provided id.");
+    }
+
+    return {
+      data: existingUser,
+      message: "User data fetched successfully",
+    };
+  } catch (error) {
+    console.error("Error in _getSingleUserListervice:", error);
+    throw error;
+  }
+}
 
 async function _getAllUserListervice() {
   try {
@@ -189,4 +216,4 @@ async function _logOutService(req: Request) {
 }
 
 
-export { verifyOTPService, _createCustomerService, _getAllUserListervice , _updateCustomerInfoService , _generateNewRefreshTokenService , _resendOtpService , _logOutService };
+export { verifyOTPService, _createCustomerService, _getAllUserListervice , _updateCustomerInfoService , _generateNewRefreshTokenService , _resendOtpService , _logOutService ,_getSingleUserService};
